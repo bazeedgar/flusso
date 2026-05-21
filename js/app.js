@@ -35,6 +35,7 @@ const App = {
     this._initAutoTheme();
     setTimeout(() => this._requestAndroidPermissions(), 1500);
     setTimeout(() => this._initWidget(), 800);
+    this._initInstallPrompt();
 
   },
 
@@ -402,6 +403,59 @@ const App = {
     const validThemes = ['light', 'dark', 'dark-grey', 'custom', 'auto'];
     const theme = validThemes.includes(saved) ? saved : 'light';
     this._setTheme(theme, false);
+  },
+
+  _initInstallPrompt() {
+    // Non mostrare su app nativa Capacitor o già installata come PWA
+    if (window.Capacitor?.isNativePlatform?.()) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (window.navigator.standalone) return; // iOS già installata
+    if (localStorage.getItem('flusso_install_dismissed')) return;
+
+    const banner  = document.getElementById('install-banner');
+    const btnOk   = document.getElementById('install-btn-ok');
+    const btnX    = document.getElementById('install-btn-dismiss');
+    const iosHint = document.getElementById('install-ios-hint');
+    if (!banner) return;
+
+    const show = () => {
+      banner.setAttribute('aria-hidden', 'false');
+      banner.classList.add('visible');
+    };
+    const hide = (permanent = true) => {
+      banner.classList.remove('visible');
+      if (permanent) localStorage.setItem('flusso_install_dismissed', '1');
+    };
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    let deferredPrompt = null;
+
+    // Android Chrome / Edge / Opera / Samsung Browser — supportano beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      setTimeout(show, 2500);
+    });
+
+    btnOk.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      }
+      hide();
+    });
+
+    btnX.addEventListener('click', () => hide());
+
+    // iOS Safari — nessun evento, mostra istruzioni manuali
+    if (isIOS && isSafari && iosHint) {
+      iosHint.style.display = '';
+      btnOk.style.display = 'none';
+      setTimeout(show, 2500);
+    }
   },
 
   _initAutoTheme() {

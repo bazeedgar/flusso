@@ -453,5 +453,21 @@
   <script src="js/agenda.js"></script>
   <script src="js/biometric.js"></script>
   <script src="js/app.js"></script>
+
+  <!-- PWA Install Banner -->
+  <div id="install-banner" class="install-banner" aria-hidden="true">
+    <div class="install-banner-card">
+      <img src="/icons/icon-192.png" class="install-banner-icon" alt="Flusso" />
+      <div class="install-banner-body">
+        <strong class="install-banner-title">Installa Flusso</strong>
+        <span class="install-banner-sub">Aggiungila alla schermata Home per accesso rapido e uso offline</span>
+      </div>
+      <button id="install-btn-ok" class="install-btn-ok">Installa</button>
+      <button id="install-btn-dismiss" class="install-btn-dismiss" aria-label="Chiudi">✕</button>
+    </div>
+    <div id="install-ios-hint" class="install-ios-hint" style="display:none">
+      Tocca <strong>⎙</strong> in basso e poi <strong>"Aggiungi a schermata Home"</strong>
+    </div>
+  </div>
 </body>
 </html>
