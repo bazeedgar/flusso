@@ -146,19 +146,9 @@ const App = {
   },
 
   _applyThemeToBars() {
-    if (!window.Capacitor?.isNativePlatform?.()) return;
-    const plugin = window.Capacitor?.Plugins?.ThemeBars;
-    if (!plugin) return;
-    // Se sidebar aperta → mantieni icons bianche con colore forest
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar && !sidebar.classList.contains('collapsed')) {
-      const forestHex = getComputedStyle(document.documentElement).getPropertyValue('--forest-hex').trim() || '#0D2B1E';
-      try { plugin.setColor({ color: forestHex, lightIcons: true }); } catch {}
-      return;
-    }
     const theme = document.documentElement.getAttribute('data-theme') || 'light';
     let isDark = theme === 'dark' || theme === 'dark-grey';
-    let color = '#ffffff';
+    let color = '#F4EFE4';
     if (theme === 'dark') color = '#0f172a';
     else if (theme === 'dark-grey') color = '#141414';
     else if (theme === 'custom') {
@@ -174,6 +164,22 @@ const App = {
       } else {
         color = this._hslToHex(h, Math.min(s, 45), 94);
       }
+    }
+
+    // PWA / browser — aggiorna theme-color meta tag
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.content = color;
+
+    // App nativa Capacitor — usa plugin ThemeBars
+    if (!window.Capacitor?.isNativePlatform?.()) return;
+    const plugin = window.Capacitor?.Plugins?.ThemeBars;
+    if (!plugin) return;
+    // Se sidebar aperta → mantieni icons bianche con colore forest
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && !sidebar.classList.contains('collapsed')) {
+      const forestHex = getComputedStyle(document.documentElement).getPropertyValue('--forest-hex').trim() || '#0D2B1E';
+      try { plugin.setColor({ color: forestHex, lightIcons: true }); } catch {}
+      return;
     }
     try { plugin.setColor({ color, lightIcons: isDark }); } catch {}
   },
