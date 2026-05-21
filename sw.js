@@ -1,4 +1,4 @@
-const CACHE = 'flusso-v6';
+const CACHE = 'flusso-v7';
 
 const STATIC_ASSETS = [
   './',
