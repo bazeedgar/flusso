@@ -166,9 +166,11 @@ const App = {
       }
     }
 
-    // PWA / browser — aggiorna theme-color meta tag
+    // PWA / browser — aggiorna status bar e navigation bar
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) metaTheme.content = color;
+    // Navigation bar (edge-to-edge): html background-color visibile dietro la nav bar di sistema
+    document.documentElement.style.backgroundColor = color;
 
     // App nativa Capacitor — usa plugin ThemeBars
     if (!window.Capacitor?.isNativePlatform?.()) return;
