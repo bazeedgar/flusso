@@ -1,0 +1,165 @@
+/* ============================================================
+   FLUSSO — Toggle neumorfic
+   ============================================================ */
+
+.f-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 30px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.f-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+}
+
+/* Track */
+.f-switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  transition: all .3s ease;
+  background: var(--f-toggle-track-light);
+  box-shadow:
+    inset 2px 2px 6px rgba(0,0,0,.13),
+    inset -1px -1px 4px rgba(255,255,255,.7),
+    3px 3px 8px rgba(0,0,0,.1),
+    -2px -2px 6px rgba(255,255,255,.65);
+}
+
+[data-theme="dark"] .f-switch-track,
+[data-theme="dark-grey"] .f-switch-track {
+  background: var(--f-toggle-track-dark);
+  box-shadow:
+    inset 3px 3px 8px rgba(0,0,0,.7),
+    inset -2px -2px 5px rgba(255,255,255,.04),
+    5px 5px 12px rgba(0,0,0,.5),
+    -2px -2px 6px rgba(255,255,255,.03);
+}
+
+/* Bordo luminoso — visibile solo quando checked */
+.f-switch-border {
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .35s ease;
+  box-shadow:
+    0 0 0 1.5px var(--f-emerald),
+    0 0 10px 2px rgba(29,158,117,.35),
+    0 0 20px 3px rgba(29,158,117,.12);
+}
+
+[data-theme="dark"] .f-switch-border,
+[data-theme="dark-grey"] .f-switch-border {
+  box-shadow:
+    0 0 0 1.5px var(--f-emerald),
+    0 0 12px 3px rgba(29,158,117,.5),
+    0 0 26px 5px rgba(29,158,117,.2);
+}
+
+.f-switch input:checked ~ .f-switch-border {
+  opacity: 1;
+}
+
+/* Thumb */
+.f-switch-thumb {
+  position: absolute;
+  top: 4px; left: 4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  pointer-events: none;
+  transition:
+    transform .32s cubic-bezier(.4,0,.2,1),
+    background .3s ease,
+    box-shadow .3s ease;
+
+  background: radial-gradient(circle at 38% 32%, #EAF4EE, #B8CFC6);
+  box-shadow:
+    3px 3px 8px rgba(0,0,0,.18),
+    -2px -2px 5px rgba(255,255,255,.85),
+    inset 1px 1px 3px rgba(255,255,255,.9),
+    inset -1px -1px 2px rgba(0,0,0,.09);
+}
+
+[data-theme="dark"] .f-switch-thumb,
+[data-theme="dark-grey"] .f-switch-thumb {
+  background: radial-gradient(circle at 38% 32%, #2E3D36, #14201B);
+  box-shadow:
+    4px 4px 10px rgba(0,0,0,.75),
+    -1px -1px 4px rgba(255,255,255,.05),
+    inset 1px 1px 3px rgba(255,255,255,.07),
+    inset -1px -1px 3px rgba(0,0,0,.6);
+}
+
+/* Thumb checked — light */
+.f-switch input:checked ~ .f-switch-thumb {
+  transform: translateX(22px);
+  background: radial-gradient(circle at 38% 32%, #35E098, #17A870);
+  box-shadow:
+    3px 3px 8px rgba(0,0,0,.2),
+    -1px -1px 4px rgba(255,255,255,.45),
+    inset 1px 1px 3px rgba(255,255,255,.4),
+    inset -1px -1px 2px rgba(0,0,0,.12),
+    0 0 8px rgba(29,158,117,.4);
+}
+
+/* Thumb checked — dark */
+[data-theme="dark"] .f-switch input:checked ~ .f-switch-thumb,
+[data-theme="dark-grey"] .f-switch input:checked ~ .f-switch-thumb {
+  background: radial-gradient(circle at 38% 32%, #30D492, #169E6A);
+  box-shadow:
+    4px 4px 10px rgba(0,0,0,.65),
+    -1px -1px 4px rgba(48,212,146,.1),
+    inset 1px 1px 4px rgba(255,255,255,.28),
+    inset -1px -1px 3px rgba(0,0,0,.3),
+    0 0 14px rgba(29,158,117,.55);
+}
+
+/* Dot di stato (opzionale, posizionato dall'esterno) */
+.f-toggle-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background .3s, box-shadow .3s;
+}
+.f-toggle-dot.on {
+  background: var(--f-emerald);
+  box-shadow: 0 0 6px 1px rgba(29,158,117,.65);
+}
+.f-toggle-dot.off {
+  background: var(--f-red);
+  box-shadow: 0 0 5px 1px rgba(226,75,74,.45);
+}
+
+/* Row modulo con toggle (impostazioni) */
+.f-module-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: .5px solid rgba(29,158,117,.08);
+}
+.f-module-row:last-child { border-bottom: none; }
+
+.f-module-row-icon {
+  width: 32px; height: 32px;
+  border-radius: var(--f-r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  background: rgba(29,158,117,.09);
+}
+.f-module-row-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--f-text-primary);
+}

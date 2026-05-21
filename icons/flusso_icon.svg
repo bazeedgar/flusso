@@ -1,0 +1,30 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="rounded">
+      <rect width="1024" height="1024" rx="230" ry="230"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="230" ry="230" fill="#0F2D23"/>
+
+  <!-- Wave 1 (light, back) -->
+  <path d="M0 600 Q110 440 256 530 Q410 630 512 490 Q614 350 768 440 Q900 520 1024 420 L1024 900 Q900 820 768 740 Q614 650 512 780 Q410 880 256 820 Q110 760 0 700 Z"
+        fill="#1D9E75" opacity="0.45" clip-path="url(#rounded)"/>
+
+  <!-- Wave 2 (strong, front) -->
+  <path d="M0 690 Q110 560 256 620 Q410 700 512 560 Q614 420 768 540 Q900 640 1024 560 L1024 900 Q900 850 768 810 Q614 760 512 860 Q410 930 256 890 Q110 850 0 800 Z"
+        fill="#1D9E75" opacity="0.9" clip-path="url(#rounded)"/>
+
+  <!-- F letterform -->
+  <text x="280" y="640"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="500"
+        font-weight="400"
+        font-style="italic"
+        fill="#F5F0E8"
+        letter-spacing="-8">F</text>
+
+  <!-- Gold accent dot -->
+  <circle cx="720" cy="290" r="58" fill="#EF9F27"/>
+</svg>

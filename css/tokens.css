@@ -1,0 +1,150 @@
+/* ============================================================
+   FLUSSO — Design Tokens
+   Importare SEMPRE per primo in index.html
+   ============================================================ */
+
+:root {
+  /* --- Palette principale --- */
+  --f-forest:       #0D2B1E;
+  --f-forest-mid:   #1A3D2A;
+  --f-forest-deep:  #1A4D35;
+  --f-emerald:      #1D9E75;
+  --f-emerald-l:    #27C48F;
+  --f-mint:         #9FE1CB;
+  --f-ivory:        #F4EFE4;
+  --f-ivory-dark:   #EDE8DE;
+  --f-gold:         #EF9F27;
+  --f-gold-light:   #FAC44A;
+  --f-red:          #E24B4A;
+  --f-red-light:    #F5A07A;
+
+  /* --- Superfici light (default) --- */
+  --f-bg-page:      #F4EFE4;
+  --f-bg-card:      #EAF2ED;
+  --f-bg-card-border: #C2D9CC;
+  --f-bg-search:    #E8EEE9;
+  --f-bg-nav:       #EDE8DE;
+  --f-bg-nav-border: #C8DDD4;
+  --f-bg-module-header: #1A3D2A;
+
+  /* --- Testo light --- */
+  --f-text-primary:   #0D2B1E;
+  --f-text-secondary: #4A7B65;
+  --f-text-muted:     #7A9E8E;
+  --f-text-placeholder: #A0B8AD;
+  --f-text-disabled:  #B0C9BC;
+
+  /* --- Pills / badge --- */
+  --f-pill-green-bg:  #D6EEE5;
+  --f-pill-green-txt: #0F6E56;
+  --f-pill-amber-bg:  #FDF3E3;
+  --f-pill-amber-txt: #854F0B;
+  --f-pill-red-bg:    #FCEAEA;
+  --f-pill-red-txt:   #A32D2D;
+  --f-pill-purple-bg: rgba(99,102,241,.1);
+  --f-pill-purple-txt:#3C3489;
+
+  /* --- Bottoni azione riga --- */
+  --f-btn-edit-bg:    #FDF3E3;
+  --f-btn-edit-border:#E8C97A;
+  --f-btn-edit-icon:  #BA7517;
+  --f-btn-del-bg:     #FCEAEA;
+  --f-btn-del-border: #EAA0A0;
+  --f-btn-del-icon:   #A32D2D;
+
+  /* --- Toggle --- */
+  --f-toggle-on-bg:   #1D9E75;
+  --f-toggle-off-bg:  rgba(29,158,117,.18);
+  --f-toggle-track-light: #C8D9D1;
+  --f-toggle-track-dark:  #141F1B;
+  --f-toggle-glow:    rgba(29,158,117,.45);
+
+  /* --- Speed dial --- */
+  --f-sd-btn-bg:      #1A4D35;
+  --f-sd-btn-icon:    #9FE1CB;
+  --f-sd-label-bg:    #0D2B1E;
+  --f-sd-label-txt:   #F4EFE4;
+
+  /* --- Sidebar dark --- */
+  --f-sidebar-bg:     #0D2B1E;
+  --f-sidebar-txt:    #C8DDD5;
+  --f-sidebar-muted:  rgba(159,225,203,.4);
+
+  /* --- Raggi --- */
+  --f-r-xs:   6px;
+  --f-r-sm:   10px;
+  --f-r-md:   12px;
+  --f-r-lg:   16px;
+  --f-r-xl:   20px;
+  --f-r-2xl:  24px;
+  --f-r-pill: 999px;
+
+  /* --- Animazioni --- */
+  --f-ease:       cubic-bezier(.4, 0, .2, 1);
+  --f-dur-fast:   150ms;
+  --f-dur-mid:    250ms;
+  --f-dur-slow:   380ms;
+
+  /* --- Ombre FAB --- */
+  --f-fab-shadow: 0 4px 16px rgba(29,158,117,.4);
+}
+
+/* ============================================================
+   TEMA SCURO  [data-theme="dark"]
+   ============================================================ */
+[data-theme="dark"] {
+  --f-bg-page:        #111C17;
+  --f-bg-card:        #1A2820;
+  --f-bg-card-border: rgba(29,158,117,.15);
+  --f-bg-search:      #1E2E27;
+  --f-bg-nav:         #0E1A14;
+  --f-bg-nav-border:  rgba(29,158,117,.12);
+  --f-bg-module-header: #0A1F15;
+
+  --f-text-primary:     #E8F4EE;
+  --f-text-secondary:   #7ABFA0;
+  --f-text-muted:       #4A7B65;
+  --f-text-placeholder: #3A5E4A;
+  --f-text-disabled:    #2E4A38;
+
+  --f-pill-green-bg:  rgba(29,158,117,.15);
+  --f-pill-green-txt: #9FE1CB;
+  --f-pill-amber-bg:  rgba(239,159,39,.12);
+  --f-pill-amber-txt: #FAC44A;
+  --f-pill-red-bg:    rgba(226,75,74,.12);
+  --f-pill-red-txt:   #F5A07A;
+
+  --f-btn-edit-bg:    rgba(239,159,39,.12);
+  --f-btn-edit-border:rgba(239,159,39,.25);
+  --f-btn-edit-icon:  #FAC44A;
+  --f-btn-del-bg:     rgba(226,75,74,.12);
+  --f-btn-del-border: rgba(226,75,74,.22);
+  --f-btn-del-icon:   #F5A07A;
+
+  --f-toggle-track-light: #141F1B;
+  --f-toggle-glow:    rgba(29,158,117,.55);
+}
+
+/* ============================================================
+   TEMA NOTTE (dark-grey)  [data-theme="dark-grey"]
+   ============================================================ */
+[data-theme="dark-grey"] {
+  --f-bg-page:        #0E0E0E;
+  --f-bg-card:        #1A1A1A;
+  --f-bg-card-border: rgba(255,255,255,.07);
+  --f-bg-search:      #1F1F1F;
+  --f-bg-nav:         #0A0A0A;
+  --f-bg-nav-border:  rgba(255,255,255,.06);
+  --f-bg-module-header: #050505;
+
+  --f-text-primary:     #F0F0F0;
+  --f-text-secondary:   #888888;
+  --f-text-muted:       #555555;
+  --f-text-placeholder: #444444;
+  --f-text-disabled:    #333333;
+
+  --f-pill-green-bg:  rgba(29,158,117,.12);
+  --f-pill-green-txt: #9FE1CB;
+  --f-pill-amber-bg:  rgba(239,159,39,.1);
+  --f-pill-amber-txt: #FAC44A;
+}

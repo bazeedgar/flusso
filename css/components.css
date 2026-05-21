@@ -1,0 +1,754 @@
+/* ============================================================
+   FLUSSO — Components
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   HERO CARD — schermata Finanze, saldo principale
+   ---------------------------------------------------------- */
+.f-hero-card {
+  margin: 0 14px 12px;
+  border-radius: var(--f-r-xl);
+  padding: 18px 18px 16px;
+  background: var(--f-bg-module-header);
+  position: relative;
+  overflow: hidden;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+
+/* Bolle decorative */
+.f-hero-card::before {
+  content: '';
+  position: absolute;
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background: rgba(29,158,117,.18);
+  top: -35px; right: -35px;
+  pointer-events: none;
+}
+.f-hero-card::after {
+  content: '';
+  position: absolute;
+  width: 75px; height: 75px;
+  border-radius: 50%;
+  background: rgba(239,159,39,.1);
+  bottom: -18px; right: 52px;
+  pointer-events: none;
+}
+
+.f-hero-label {
+  font-size: 10px;
+  color: rgba(159,225,203,.65);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 4px;
+}
+
+.f-hero-amount {
+  font-family: 'DM Serif Display', serif;
+  font-size: 36px;
+  color: var(--f-ivory);
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+.f-hero-amount .f-hero-currency {
+  font-size: 18px;
+  opacity: .6;
+  margin-right: 2px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+}
+
+.f-hero-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.f-hero-chip {
+  background: rgba(255,255,255,.07);
+  border: .5px solid rgba(255,255,255,.1);
+  border-radius: var(--f-r-md);
+  padding: 9px 10px;
+}
+.f-hero-chip-label {
+  font-size: 9px;
+  color: rgba(159,225,203,.6);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.f-hero-chip-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--f-ivory);
+  margin-top: 2px;
+}
+.f-hero-chip-value.income { color: var(--f-mint); }
+.f-hero-chip-value.expense { color: var(--f-red-light); }
+
+/* ----------------------------------------------------------
+   MODULE HEADER — Casa, Veicoli, ecc.
+   ---------------------------------------------------------- */
+.f-module-header {
+  margin: 0 14px 12px;
+  border-radius: var(--f-r-xl);
+  padding: 16px 18px;
+  background: var(--f-bg-module-header);
+  position: relative;
+  overflow: hidden;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+.f-module-header::before {
+  content: '';
+  position: absolute;
+  width: 95px; height: 95px;
+  border-radius: 50%;
+  background: rgba(239,159,39,.1);
+  top: -22px; right: -22px;
+  pointer-events: none;
+}
+
+.f-module-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.f-module-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--f-ivory);
+}
+.f-module-subtitle {
+  font-size: 11px;
+  color: rgba(159,225,203,.6);
+  margin-top: 2px;
+}
+.f-module-total {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--f-ivory);
+  letter-spacing: -.5px;
+  margin-bottom: 10px;
+}
+.f-module-total .f-module-total-label {
+  font-size: 11px;
+  opacity: .5;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+}
+
+.f-module-stats {
+  display: grid;
+  gap: 5px;
+}
+.f-module-stats.cols-2 { grid-template-columns: 1fr 1fr; }
+.f-module-stats.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.f-module-stats.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.f-stat-chip {
+  background: rgba(255,255,255,.08);
+  border: .5px solid rgba(255,255,255,.1);
+  border-radius: var(--f-r-sm);
+  padding: 7px 8px;
+}
+.f-stat-label {
+  font-size: 9px;
+  color: rgba(159,225,203,.6);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.f-stat-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--f-ivory);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Bottoni header modulo */
+.f-module-header-actions {
+  display: flex;
+  gap: 5px;
+}
+.f-header-btn {
+  width: 30px; height: 30px;
+  border-radius: var(--f-r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: opacity var(--f-dur-fast);
+}
+.f-header-btn:active { opacity: .7; }
+.f-header-btn.edit {
+  background: rgba(255,255,255,.1);
+  border: .5px solid rgba(255,255,255,.15);
+  color: var(--f-mint);
+}
+.f-header-btn.delete {
+  background: rgba(226,75,74,.2);
+  border: .5px solid rgba(226,75,74,.25);
+  color: var(--f-red-light);
+}
+
+/* ----------------------------------------------------------
+   ENTRY ROW — lista voci a 2 righe
+   ---------------------------------------------------------- */
+.f-entry-row {
+  padding: 10px 11px;
+  background: var(--f-bg-card);
+  border-radius: var(--f-r-md);
+  border: .5px solid var(--f-bg-card-border);
+  transition:
+    background var(--f-dur-fast) var(--f-ease),
+    border-color var(--f-dur-fast) var(--f-ease);
+}
+.f-entry-row:active {
+  opacity: .85;
+}
+
+/* Riga 1: data + titolo */
+.f-entry-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  min-width: 0;
+}
+.f-entry-date {
+  font-size: 10px;
+  color: var(--f-text-muted);
+  flex-shrink: 0;
+  width: 46px;
+}
+.f-entry-desc {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--f-text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Riga 2: categoria + spacer + importo + azioni */
+.f-entry-bottom {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 52px; /* allineato sotto il titolo */
+  min-width: 0;
+}
+.f-entry-amount {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--f-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.f-entry-actions {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+/* Versione semplice senza categoria (es. Veicoli rifornimento base) */
+.f-entry-row.simple .f-entry-top {
+  margin-bottom: 0;
+}
+.f-entry-row.simple .f-entry-bottom {
+  display: none;
+}
+.f-entry-row.simple .f-entry-top {
+  align-items: center;
+}
+.f-entry-row.simple .f-entry-amount-inline {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--f-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ----------------------------------------------------------
+   BOTTONI AZIONE RIGA (modifica / elimina)
+   ---------------------------------------------------------- */
+.f-btn-edit,
+.f-btn-delete {
+  width: 26px; height: 26px;
+  border-radius: var(--f-r-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: .5px solid;
+  flex-shrink: 0;
+  transition: opacity var(--f-dur-fast);
+}
+.f-btn-edit:active,
+.f-btn-delete:active { opacity: .65; }
+
+.f-btn-edit {
+  background: var(--f-btn-edit-bg);
+  border-color: var(--f-btn-edit-border);
+  color: var(--f-btn-edit-icon);
+}
+.f-btn-delete {
+  background: var(--f-btn-del-bg);
+  border-color: var(--f-btn-del-border);
+  color: var(--f-btn-del-icon);
+}
+
+/* ----------------------------------------------------------
+   PILLS / BADGE
+   ---------------------------------------------------------- */
+.f-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: var(--f-r-pill);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+.f-pill-green {
+  background: var(--f-pill-green-bg);
+  color: var(--f-pill-green-txt);
+}
+.f-pill-amber {
+  background: var(--f-pill-amber-bg);
+  color: var(--f-pill-amber-txt);
+}
+.f-pill-red {
+  background: var(--f-pill-red-bg);
+  color: var(--f-pill-red-txt);
+}
+.f-pill-purple {
+  background: var(--f-pill-purple-bg);
+  color: var(--f-pill-purple-txt);
+}
+/* Pill periodo/filtro grande */
+.f-pill-filter {
+  padding: 5px 14px;
+  font-size: 11px;
+  cursor: pointer;
+  border: .5px solid var(--f-bg-card-border);
+  background: var(--f-bg-card);
+  color: var(--f-text-secondary);
+  transition: all var(--f-dur-fast);
+}
+.f-pill-filter.active {
+  background: var(--f-emerald);
+  color: #fff;
+  border-color: var(--f-emerald);
+  font-weight: 500;
+}
+
+/* ----------------------------------------------------------
+   PULSANTE AGGIUNGI (verde pill)
+   ---------------------------------------------------------- */
+.f-btn-add {
+  background: var(--f-emerald);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: var(--f-r-pill);
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  flex-shrink: 0;
+  transition: opacity var(--f-dur-fast);
+}
+.f-btn-add:active { opacity: .8; }
+
+/* ----------------------------------------------------------
+   SEZIONE HEADER (titolo sezione + btn aggiungi)
+   ---------------------------------------------------------- */
+.f-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px 8px;
+  flex-shrink: 0;
+}
+.f-section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--f-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.f-section-title i {
+  font-size: 14px;
+  color: var(--f-emerald);
+}
+
+/* ----------------------------------------------------------
+   SEARCH BAR
+   ---------------------------------------------------------- */
+.f-search {
+  margin: 0 14px 8px;
+  background: var(--f-bg-search);
+  border-radius: var(--f-r-md);
+  padding: 8px 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+.f-search i {
+  font-size: 15px;
+  color: var(--f-text-muted);
+  flex-shrink: 0;
+}
+.f-search span {
+  font-size: 12px;
+  color: var(--f-text-placeholder);
+}
+.f-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--f-text-primary);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+.f-search input::placeholder {
+  color: var(--f-text-placeholder);
+}
+
+/* ----------------------------------------------------------
+   ENTRY LIST WRAPPER
+   ---------------------------------------------------------- */
+.f-entry-list {
+  padding: 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ----------------------------------------------------------
+   TAB ROW (Rifornimenti, Assicurazione, ecc.)
+   ---------------------------------------------------------- */
+.f-tab-row {
+  display: flex;
+  gap: 4px;
+  padding: 0 14px 10px;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.f-tab-btn {
+  padding: 5px 12px;
+  border-radius: var(--f-r-pill);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+  border: .5px solid var(--f-bg-card-border);
+  background: var(--f-pill-green-bg);
+  color: var(--f-pill-green-txt);
+  transition: all var(--f-dur-fast);
+}
+.f-tab-btn.active {
+  background: var(--f-emerald);
+  color: #fff;
+  border-color: var(--f-emerald);
+  font-weight: 500;
+}
+
+/* ----------------------------------------------------------
+   CATEGORIA ROW (Spesa — lista categorie)
+   ---------------------------------------------------------- */
+.f-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: var(--f-r-md);
+  margin: 0 6px;
+  transition: background var(--f-dur-fast);
+}
+.f-cat-row:active {
+  background: rgba(29,158,117,.06);
+}
+.f-cat-icon {
+  width: 36px; height: 36px;
+  border-radius: var(--f-r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+.f-cat-info {
+  flex: 1;
+  min-width: 0;
+}
+.f-cat-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--f-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.f-cat-sub {
+  font-size: 10px;
+  color: var(--f-text-secondary);
+  margin-top: 1px;
+}
+.f-cat-bar-wrap {
+  height: 3px;
+  background: rgba(29,158,117,.1);
+  border-radius: 2px;
+  margin-top: 5px;
+  width: 100%;
+}
+.f-cat-bar-fill {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--f-emerald);
+  transition: width var(--f-dur-slow) var(--f-ease);
+}
+.f-cat-amount {
+  text-align: right;
+  flex-shrink: 0;
+}
+.f-cat-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--f-text-primary);
+  white-space: nowrap;
+}
+.f-cat-pct {
+  font-size: 10px;
+  color: var(--f-text-secondary);
+}
+
+/* ----------------------------------------------------------
+   CALENDAR
+   ---------------------------------------------------------- */
+.f-cal-card {
+  margin: 0 14px 10px;
+  background: var(--f-bg-card);
+  border: .5px solid var(--f-bg-card-border);
+  border-radius: var(--f-r-lg);
+  padding: 14px;
+  flex-shrink: 0;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+.f-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.f-cal-month {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  color: var(--f-text-primary);
+}
+.f-cal-nav {
+  width: 28px; height: 28px;
+  border-radius: var(--f-r-sm);
+  background: var(--f-pill-green-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--f-emerald);
+  font-size: 14px;
+  border: none;
+  transition: opacity var(--f-dur-fast);
+}
+.f-cal-nav:active { opacity: .7; }
+.f-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+.f-cal-day-name {
+  font-size: 9px;
+  color: var(--f-text-muted);
+  padding: 3px 0;
+  font-weight: 500;
+}
+.f-cal-day {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--f-text-primary);
+  border-radius: var(--f-r-sm);
+  cursor: pointer;
+  transition: background var(--f-dur-fast);
+}
+.f-cal-day:hover, .f-cal-day:active { background: rgba(29,158,117,.1); }
+.f-cal-day.today {
+  background: var(--f-emerald);
+  color: #fff;
+  font-weight: 500;
+}
+.f-cal-day.muted { color: var(--f-text-disabled); }
+.f-cal-day.has-event::after {
+  content: '';
+  display: block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--f-gold);
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.f-cal-day { position: relative; }
+
+/* ----------------------------------------------------------
+   BREAKDOWN BAR (Finanze)
+   ---------------------------------------------------------- */
+.f-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-radius: var(--f-r-md);
+  margin: 0 6px;
+  transition: background var(--f-dur-fast);
+}
+.f-breakdown-row:active { background: rgba(29,158,117,.05); }
+
+/* ----------------------------------------------------------
+   TAB PANEL show/hide
+   ---------------------------------------------------------- */
+.f-tab-panel { display: none; }
+.f-tab-panel.active { display: block; }
+
+/* Blocco overflow orizzontale senza bloccare lo scroll verticale */
+.tab-content {
+  overflow-x: clip !important;
+  width: 100%;
+  max-width: 100vw;
+}
+.tab-panel {
+  overflow-x: clip;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Wrapper lista moduli (casa, veicoli) */
+.f-modules-list {
+  padding-bottom: 80px;
+  overflow-x: clip;
+}
+.f-module-wrapper {
+  margin-bottom: 12px;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+/* ----------------------------------------------------------
+   EMPTY STATE
+   ---------------------------------------------------------- */
+.f-empty-state {
+  text-align: center;
+  padding: 28px 20px;
+  color: var(--f-text-muted);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.f-empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.f-empty-sub {
+  font-size: 11px;
+  color: var(--f-text-disabled);
+  margin-top: 4px;
+}
+
+/* ----------------------------------------------------------
+   SIDEBAR
+   ---------------------------------------------------------- */
+.f-sidebar {
+  position: fixed;
+  top: 0; left: -240px; bottom: 0;
+  width: 230px;
+  background: var(--f-sidebar-bg);
+  z-index: 100;
+  transition: left var(--f-dur-slow) var(--f-ease);
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) 0 0;
+}
+.f-sidebar.open { left: 0; }
+
+.f-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13,43,30,0);
+  z-index: 99;
+  pointer-events: none;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+.f-sidebar-overlay.open {
+  background: rgba(13,43,30,.5);
+  pointer-events: auto;
+}
+
+.f-sidebar-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--f-mint);
+  letter-spacing: -.5px;
+}
+
+.f-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--f-r-md);
+  cursor: pointer;
+  transition: background var(--f-dur-fast);
+}
+.f-sidebar-item:active { background: rgba(255,255,255,.06); }
+.f-sidebar-item i {
+  font-size: 16px;
+  color: var(--f-text-muted);
+  flex-shrink: 0;
+}
+.f-sidebar-item span {
+  font-size: 12px;
+  color: var(--f-sidebar-txt);
+}
+
+.f-sidebar-divider {
+  height: .5px;
+  background: rgba(255,255,255,.08);
+  margin: 10px 16px;
+}
+
+.f-sidebar-section-label {
+  font-size: 9px;
+  color: var(--f-sidebar-muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 6px 18px;
+}

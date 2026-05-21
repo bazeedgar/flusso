@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Flusso</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#F4EFE4" />
+
+  <!-- iOS (Safari) -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Flusso" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+  <!-- Android -->
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <link rel="icon" type="image/svg+xml" href="/icons/flusso_icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+
+  <!-- Preload font critici -->
+  <link rel="preload" href="fonts/dm-serif-display-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/dm-serif-display-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Applica tema prima del render -->
+  <script>
+    try {
+      var t = localStorage.getItem('financeApp_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      if (window.FlussoNative) {
+        var _dp = window.FlussoNative.getStatusBarDp();
+        if (_dp > 0) document.documentElement.style.setProperty('--sat', _dp + 'px');
+      }
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        var _TB = window.Capacitor.Plugins && window.Capacitor.Plugins.ThemeBars;
+        if (_TB) {
+          var _dark = t === 'dark' || t === 'dark-grey';
+          var _clr  = _dark ? (t === 'dark' ? '#111C17' : '#0E0E0E') : '#F4EFE4';
+          _TB.setColor({ color: _clr, lightIcons: _dark });
+        }
+      }
+    } catch(e) {}
+  </script>
+
+  <!-- Design system -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Sidebar impostazioni -->
+  <nav id="sidebar" class="sidebar collapsed">
+    <div class="sidebar-header">
+      <span class="sidebar-title f-sidebar-logo" data-i18n="settings.title">⚙️ Impostazioni</span>
+    </div>
+    <div class="sidebar-nav">
+      <div class="theme-picker">
+        <div class="theme-picker-label f-sidebar-section-label" data-i18n="settings.theme">Tema</div>
+        <div class="theme-options">
+          <button class="theme-opt" data-theme="light">
+            <span class="theme-swatch theme-swatch-light"></span>
+            <span data-i18n="settings.theme.light">Chiaro</span>
+          </button>
+          <button class="theme-opt" data-theme="dark">
+            <span class="theme-swatch theme-swatch-dark"></span>
+            <span data-i18n="settings.theme.dark">Scuro</span>
+          </button>
+          <button class="theme-opt" data-theme="dark-grey">
+            <span class="theme-swatch theme-swatch-dark-grey"></span>
+            <span data-i18n="settings.theme.night">Notte</span>
+          </button>
+          <button class="theme-opt" data-theme="custom">
+            <span class="theme-swatch" id="custom-theme-swatch" style="background:#c7b8ea"></span>
+            <span data-i18n="settings.theme.custom">Custom</span>
+          </button>
+          <button class="theme-opt" data-theme="auto">
+            <span class="theme-swatch theme-swatch-auto"></span>
+            <span data-i18n="settings.theme.auto">Auto</span>
+          </button>
+        </div>
+        <div id="auto-theme-row" class="auto-theme-row" style="display:none">
+          <div class="auto-mode-tabs">
+            <button class="auto-mode-btn active" data-mode="system" data-i18n="settings.auto.mode.system">Segui sistema</button>
+            <button class="auto-mode-btn" data-mode="time" data-i18n="settings.auto.mode.time">Per orario</button>
+          </div>
+          <div id="auto-time-row" class="auto-time-row" style="display:none">
+            <div class="auto-time-line">
+              <span data-i18n="settings.auto.dark_from">Scuro dalle</span>
+              <input type="time" id="auto-dark-from" value="20:00" class="auto-time-input"/>
+            </div>
+            <div class="auto-time-line">
+              <span data-i18n="settings.auto.dark_to">fino alle</span>
+              <input type="time" id="auto-dark-to" value="07:00" class="auto-time-input"/>
+            </div>
+          </div>
+        </div>
+        <div id="custom-color-row" class="custom-color-row" style="display:none">
+          <div class="custom-mode-tabs">
+            <button class="custom-mode-btn active" data-mode="light" data-i18n="settings.theme.light">Chiaro</button>
+            <button class="custom-mode-btn" data-mode="dark" data-i18n="settings.theme.dark">Scuro</button>
+            <button class="custom-mode-btn" data-mode="black" data-i18n="settings.theme.black">Nero</button>
+          </div>
+          <div class="palette-grid" id="palette-grid">
+            <button class="palette-swatch" data-color="#6366f1" style="background:#6366f1" title="Indigo"></button>
+            <button class="palette-swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Viola"></button>
+            <button class="palette-swatch" data-color="#c7b8ea" style="background:#c7b8ea" title="Lavanda"></button>
+            <button class="palette-swatch" data-color="#ec4899" style="background:#ec4899" title="Rosa"></button>
+            <button class="palette-swatch" data-color="#f43f5e" style="background:#f43f5e" title="Rosso"></button>
+            <button class="palette-swatch" data-color="#f97316" style="background:#f97316" title="Arancio"></button>
+            <button class="palette-swatch" data-color="#eab308" style="background:#eab308" title="Giallo"></button>
+            <button class="palette-swatch" data-color="#22c55e" style="background:#22c55e" title="Verde"></button>
+            <button class="palette-swatch" data-color="#14b8a6" style="background:#14b8a6" title="Teal"></button>
+            <button class="palette-swatch" data-color="#0ea5e9" style="background:#0ea5e9" title="Cielo"></button>
+            <button class="palette-swatch" data-color="#64748b" style="background:#64748b" title="Grigio"></button>
+            <button class="palette-swatch" data-color="#78716c" style="background:#78716c" title="Pietra"></button>
+          </div>
+          <div class="palette-sliders">
+            <div class="palette-slider-row">
+              <span class="palette-slider-label" data-i18n="settings.color.hue">Tonalità</span>
+              <input type="range" id="hue-slider" min="0" max="359" value="250" class="hue-slider" />
+            </div>
+            <div class="palette-slider-row">
+              <span class="palette-slider-label" data-i18n="settings.color.light">Luminosità</span>
+              <input type="range" id="light-slider" min="30" max="80" value="55" class="light-slider" />
+            </div>
+          </div>
+          <div class="palette-hex-row">
+            <span class="color-pick-label">HEX</span>
+            <input type="text" id="custom-color-input" maxlength="7" placeholder="#c7b8ea" class="palette-hex-input" />
+            <span id="custom-theme-dot" class="palette-preview-dot" style="background:#c7b8ea"></span>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-divider f-sidebar-divider"></div>
+      <div class="modules-picker">
+        <div class="modules-picker-label f-sidebar-section-label" data-i18n="settings.modules">Moduli visibili</div>
+
+        <div class="mod-toggle-row f-module-row">
+          <div class="mod-icon f-module-row-icon">🏠</div>
+          <span class="mod-label f-module-row-name" data-i18n="settings.mod.casa">Casa</span>
+          <label class="f-switch" aria-label="Casa">
+            <input type="checkbox" class="mod-cb" id="mod-casa" data-tab="casa" checked>
+            <div class="f-switch-track"></div>
+            <div class="f-switch-border"></div>
+            <div class="f-switch-thumb"></div>
+          </label>
+        </div>
+        <div class="mod-toggle-row f-module-row">
+          <div class="mod-icon f-module-row-icon">🛒</div>
+          <span class="mod-label f-module-row-name" data-i18n="settings.mod.spesa">Spesa</span>
+          <label class="f-switch" aria-label="Spesa">
+            <input type="checkbox" class="mod-cb" id="mod-spesa" data-tab="spesa" checked>
+            <div class="f-switch-track"></div>
+            <div class="f-switch-border"></div>
+            <div class="f-switch-thumb"></div>
+          </label>
+        </div>
+        <div class="mod-toggle-row f-module-row">
+          <div class="mod-icon f-module-row-icon">🎬</div>
+          <span class="mod-label f-module-row-name" data-i18n="settings.mod.svago">Svago</span>
+          <label class="f-switch" aria-label="Svago">
+            <input type="checkbox" class="mod-cb" id="mod-intrattenimento" data-tab="intrattenimento" checked>
+            <div class="f-switch-track"></div>
+            <div class="f-switch-border"></div>
+            <div class="f-switch-thumb"></div>
+          </label>
+        </div>
+        <div class="mod-toggle-row f-module-row">
+          <div class="mod-icon f-module-row-icon">🚗</div>
+          <span class="mod-label f-module-row-name" data-i18n="settings.mod.veicoli">Veicoli</span>
+          <label class="f-switch" aria-label="Veicoli">
+            <input type="checkbox" class="mod-cb" id="mod-veicoli" data-tab="veicoli" checked>
+            <div class="f-switch-track"></div>
+            <div class="f-switch-border"></div>
+            <div class="f-switch-thumb"></div>
+          </label>
+        </div>
+        <div class="mod-toggle-row f-module-row">
+          <div class="mod-icon f-module-row-icon">📅</div>
+          <span class="mod-label f-module-row-name" data-i18n="settings.mod.agenda">Agenda</span>
+          <label class="f-switch" aria-label="Agenda">
+            <input type="checkbox" class="mod-cb" id="mod-agenda" data-tab="agenda" checked>
+            <div class="f-switch-track"></div>
+            <div class="f-switch-border"></div>
+            <div class="f-switch-thumb"></div>
+          </label>
+        </div>
+      </div>
+      <div class="sidebar-divider f-sidebar-divider"></div>
+      <button class="sidebar-nav-btn f-sidebar-item" id="stg-export-btn">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="nav-label" data-i18n="settings.export">Esporta dati</span>
+      </button>
+      <button class="sidebar-nav-btn f-sidebar-item" id="stg-import-btn">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span class="nav-label" data-i18n="settings.import">Importa dati</span>
+      </button>
+      <button class="sidebar-nav-btn f-sidebar-item" id="stg-backups-btn">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span class="nav-label" data-i18n="settings.backup">Backup</span>
+      </button>
+      <button class="sidebar-nav-btn f-sidebar-item" id="stg-perms-btn" style="display:none">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="nav-label" data-i18n="settings.notifs">Preferenze notifiche</span>
+      </button>
+      <div class="sidebar-divider f-sidebar-divider" id="biometric-divider" style="display:none"></div>
+      <div class="mod-toggle-row f-module-row" id="biometric-toggle-row" style="display:none">
+        <div class="mod-icon f-module-row-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3"/><path d="M8 11a4 4 0 0 1 8 0v1a10 10 0 0 0 2 6"/><path d="M12 11v2a14 14 0 0 0 2.5 8"/><path d="M8 15a18 18 0 0 0 1.8 6"/><path d="M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95"/></svg>
+        </div>
+        <span class="mod-label f-module-row-name" data-i18n="biometric.toggle">Sblocco biometrico</span>
+        <label class="f-switch" aria-label="Sblocco biometrico">
+          <input type="checkbox" class="mod-cb" id="biometric-cb">
+          <div class="f-switch-track"></div>
+          <div class="f-switch-border"></div>
+          <div class="f-switch-thumb"></div>
+        </label>
+      </div>
+      <div class="sidebar-divider f-sidebar-divider"></div>
+      <div class="lang-picker">
+        <div class="lang-picker-label f-sidebar-section-label" data-i18n="settings.lang">Lingua</div>
+        <div class="lang-options">
+          <button class="lang-opt active" data-lang="it">🇮🇹 Italiano</button>
+          <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div id="sidebar-backdrop"></div>
+
+  <div id="app" class="f-app-root">
+    <header class="app-header f-topbar">
+      <div class="header-inner f-topbar-inner">
+        <div class="header-left">
+          <button id="sidebar-toggle-btn" class="sidebar-toggle-inner f-menu-btn" title="Toggle menu">☰</button>
+          <h1 class="app-title f-logo">Fl<em>u</em>sso</h1>
+        </div>
+        <div class="header-periods">
+          <div class="f-period-pill">
+            <select id="globalMonth" style="background:transparent;border:none;color:inherit;font:inherit;font-size:11px;cursor:pointer;outline:none;-webkit-appearance:none">
+              <option value="all" data-i18n="period.all_months">Tutti i mesi</option>
+            </select>
+            <svg class="period-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="f-period-pill">
+            <select id="globalYear" style="background:transparent;border:none;color:inherit;font:inherit;font-size:11px;cursor:pointer;outline:none;-webkit-appearance:none">
+              <option value="all" data-i18n="period.all_years">Tutti gli anni</option>
+            </select>
+            <svg class="period-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="header-right f-topbar-actions">
+          <span id="save-status" class="save-status"></span>
+        </div>
+      </div>
+    </header>
+
+    <main class="tab-content">
+      <div id="tab-finanze" class="tab-panel active"></div>
+      <div id="tab-casa" class="tab-panel"></div>
+      <div id="tab-spesa" class="tab-panel"></div>
+      <div id="tab-intrattenimento" class="tab-panel"></div>
+      <div id="tab-veicoli" class="tab-panel"></div>
+      <div id="tab-agenda" class="tab-panel"></div>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Aggiungi</h2>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+      <div id="modal-attach-section" class="modal-attach-section" style="display:none">
+        <div class="attach-header">
+          <span class="attach-label" data-i18n="attach.label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="vertical-align:middle"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Allegati</span>
+          <div class="attach-btns">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-attach-camera" data-i18n="attach.camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="vertical-align:middle"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Scatta foto</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-attach-archive" data-i18n="attach.archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="vertical-align:middle"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Seleziona file</button>
+          </div>
+        </div>
+        <div id="modal-attach-preview" class="attach-preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM DIALOG -->
+  <div id="confirm-overlay" class="modal-overlay hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header"><h2 data-i18n="confirm.title">Conferma</h2></div>
+      <div class="modal-body">
+        <p id="confirm-message">Sei sicuro?</p>
+        <div class="form-actions">
+          <button class="btn btn-danger" id="confirm-yes" data-i18n="common.delete">Elimina</button>
+          <button class="btn btn-secondary" id="confirm-no" data-i18n="common.cancel">Annulla</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTIONS MANAGER -->
+  <div id="opts-overlay" class="modal-overlay hidden" style="z-index:1000">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 data-i18n="opts.title">Gestisci opzioni</h2>
+        <button class="modal-close" id="opts-close-btn">&times;</button>
+      </div>
+      <div id="opts-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- CAMERA OVERLAY -->
+  <div id="camera-overlay" class="camera-overlay hidden">
+    <video id="camera-video" autoplay playsinline muted></video>
+    <div class="camera-controls">
+      <button id="camera-cancel-btn" class="btn btn-secondary" data-i18n="common.cancel">Annulla</button>
+      <button id="camera-capture-btn" class="btn btn-primary" style="padding:12px 28px;font-size:16px" data-i18n="camera.capture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Scatta</button>
+    </div>
+  </div>
+
+  <!-- BIOMETRIC ONBOARDING PROMPT -->
+  <div id="biometric-prompt-overlay" class="modal-overlay hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle"><path d="M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3"/><path d="M8 11a4 4 0 0 1 8 0v1a10 10 0 0 0 2 6"/><path d="M12 11v2a14 14 0 0 0 2.5 8"/><path d="M8 15a18 18 0 0 0 1.8 6"/><path d="M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95"/></svg> <span data-i18n="biometric.toggle">Sblocco biometrico</span></h2>
+      </div>
+      <div class="modal-body">
+        <p data-i18n="biometric.prompt.msg">Vuoi proteggere Flusso con impronta digitale o PIN?</p>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="biometric-prompt-yes" data-i18n="biometric.prompt.yes">Abilita</button>
+          <button class="btn btn-secondary" id="biometric-prompt-no" data-i18n="biometric.prompt.no">Non ora</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BIOMETRIC LOCK SCREEN -->
+  <div id="biometric-lock" class="biometric-lock hidden">
+    <div class="biometric-lock-inner">
+      <div class="biometric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" width="72" height="72"><path d="M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3"/><path d="M8 11a4 4 0 0 1 8 0v1a10 10 0 0 0 2 6"/><path d="M12 11v2a14 14 0 0 0 2.5 8"/><path d="M8 15a18 18 0 0 0 1.8 6"/><path d="M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95"/></svg></div>
+      <div class="biometric-app-name">Fl<em>u</em>sso</div>
+      <p class="biometric-hint" data-i18n="biometric.subtitle">Sblocca con impronta digitale o PIN</p>
+      <button id="biometric-retry-btn" class="btn btn-primary biometric-retry-btn" style="display:none"
+        onclick="BiometricAuth.tryUnlock()">
+        🔑 <span data-i18n="biometric.retry">Riprova</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox-overlay" class="lightbox-overlay hidden">
+    <button id="lightbox-close" class="lightbox-close">&times;</button>
+    <img id="lightbox-img" src="" alt="" class="lightbox-img" />
+  </div>
+
+  <input type="file" id="attach-camera-input" accept="image/*" capture="environment" style="display:none" />
+  <input type="file" id="attach-archive-input" multiple style="display:none" />
+  <input type="file" id="import-file-input" accept=".json" style="display:none" />
+  <input type="file" id="ocr-capture-input" accept="image/*" capture="environment" style="display:none" />
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="bottom-nav f-bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-btn f-nav-item active" data-tab="finanze" data-page="finanze">
+      <div class="bnav-pill">
+        <svg class="bnav-icon f-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <rect x="3" y="12" width="4" height="9" rx="1"/>
+          <rect x="10" y="6" width="4" height="15" rx="1"/>
+          <rect x="17" y="3" width="4" height="18" rx="1"/>
+        </svg>
+      </div>
+      <span class="bnav-label f-nav-label" data-i18n="nav.finanze">Finanze</span>
+    </button>
+    <button class="bottom-nav-btn f-nav-item" data-tab="casa" data-page="casa">
+      <div class="bnav-pill">
+        <svg class="bnav-icon f-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3,11 12,3 21,11"/>
+          <path d="M5 11v8a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-8"/>
+        </svg>
+      </div>
+      <span class="bnav-label f-nav-label" data-i18n="nav.casa">Casa</span>
+    </button>
+    <button class="bottom-nav-btn f-nav-item" data-tab="spesa" data-page="spesa">
+      <div class="bnav-pill">
+        <svg class="bnav-icon f-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1.5" fill="currentColor" stroke="none"/>
+          <circle cx="20" cy="21" r="1.5" fill="currentColor" stroke="none"/>
+          <path d="M1 1h3l2.4 12h11.2l2-8H6"/>
+        </svg>
+      </div>
+      <span class="bnav-label f-nav-label" data-i18n="nav.spesa">Spesa</span>
+    </button>
+    <button class="bottom-nav-btn f-nav-item" data-tab="intrattenimento" data-page="intrattenimento">
+      <div class="bnav-pill">
+        <svg class="bnav-icon f-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 4l14 8-14 8V4z"/>
+        </svg>
+      </div>
+      <span class="bnav-label f-nav-label" data-i18n="nav.svago">Svago</span>
+    </button>
+    <button class="bottom-nav-btn f-nav-item" data-tab="veicoli" data-page="veicoli">
+      <div class="bnav-pill">
+        <svg class="bnav-icon f-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 11l2-5h12l2 5"/>
+          <rect x="2" y="11" width="20" height="7" rx="2"/>
+          <circle cx="7" cy="18" r="2.5" fill="currentColor" stroke="none"/>
+          <circle cx="17" cy="18" r="2.5" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <span class="bnav-label f-nav-label" data-i18n="nav.veicoli">Veicoli</span>
+    </button>
+    <button class="bottom-nav-btn f-nav-item" data-tab="agenda" data-page="agenda">
+      <div class="bnav-pill">
+        <svg class="bnav-icon f-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+          <line x1="8" y1="14" x2="8.01" y2="14" stroke-width="3"/>
+          <line x1="12" y1="14" x2="12.01" y2="14" stroke-width="3"/>
+          <line x1="16" y1="14" x2="16.01" y2="14" stroke-width="3"/>
+        </svg>
+      </div>
+      <span class="bnav-label f-nav-label" data-i18n="nav.agenda">Agenda</span>
+    </button>
+  </nav>
+
+  <script>
+    if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(r => console.log('SW registrato:', r.scope))
+          .catch(e => console.warn('SW fallito:', e));
+      });
+    }
+  </script>
+  <script src="js/translations.js"></script>
+  <script src="js/lang.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/images.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/ocr.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/casa.js"></script>
+  <script src="js/spesa.js"></script>
+  <script src="js/intrattenimento.js"></script>
+  <script src="js/veicoli.js"></script>
+  <script src="js/finanze.js"></script>
+  <script src="js/agenda.js"></script>
+  <script src="js/biometric.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

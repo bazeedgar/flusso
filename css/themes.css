@@ -1,0 +1,46 @@
+/* ============================================================
+   FLUSSO — Temi aggiuntivi
+   ============================================================ */
+
+/* Tema Custom: accent iniettato da theme.js via --f-emerald */
+[data-theme="custom"] {
+  /* --f-emerald viene sovrascritta via JS da localStorage */
+  /* Le variabili derivate si aggiornano automaticamente */
+}
+
+/* Transizione morbida al cambio tema */
+html.f-theme-changing,
+html.f-theme-changing * {
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    color 300ms ease,
+    box-shadow 300ms ease !important;
+}
+
+/* Override specifici per ogni tema --- */
+
+/* Light: statusbar icons scure */
+[data-theme="light"] meta[name="theme-color"] {
+  content: #F4EFE4;
+}
+
+/* Dark: background più profondo per le card */
+[data-theme="dark"] .f-hero-card {
+  background: #0A1F15;
+}
+[data-theme="dark"] .f-module-header {
+  background: #0A1F15;
+}
+
+/* Dark-grey: tutto desaturato */
+[data-theme="dark-grey"] .f-hero-card {
+  background: #080808;
+}
+[data-theme="dark-grey"] .f-module-header {
+  background: #080808;
+}
+[data-theme="dark-grey"] .f-stat-chip {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.06);
+}

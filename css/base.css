@@ -1,0 +1,117 @@
+/* ============================================================
+   FLUSSO — Base
+   ============================================================ */
+
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  background: var(--f-bg-page);
+  color: var(--f-text-primary);
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  transition: background var(--f-dur-mid) var(--f-ease),
+              color var(--f-dur-mid) var(--f-ease);
+}
+
+/* Safe area per Android statusbar trasparente */
+.f-app-root {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Nascondi scrollbar ovunque */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Font utility */
+.f-font-serif {
+  font-family: 'DM Serif Display', serif;
+}
+.f-font-sans {
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Troncamento testo */
+.f-trunc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Spacer flex */
+.f-spacer {
+  flex: 1;
+}
+
+/* Transizione colori per cambio tema */
+.f-theme-transition,
+.f-theme-transition * {
+  transition:
+    background-color var(--f-dur-mid) var(--f-ease),
+    border-color var(--f-dur-mid) var(--f-ease),
+    color var(--f-dur-mid) var(--f-ease),
+    box-shadow var(--f-dur-mid) var(--f-ease) !important;
+}
+
+/* Accessibilità — screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* Animazioni entrata pagina */
+@keyframes f-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes f-slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes f-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-20px); }
+}
+
+.f-page-enter {
+  animation: f-slide-in var(--f-dur-slow) var(--f-ease) both;
+}
+
+/* Stagger entrata lista */
+.f-stagger > * {
+  animation: f-fade-up var(--f-dur-mid) var(--f-ease) both;
+}
+.f-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.f-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.f-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.f-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.f-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.f-stagger > *:nth-child(6) { animation-delay: 250ms; }

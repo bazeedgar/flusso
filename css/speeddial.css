@@ -1,0 +1,275 @@
+/* ============================================================
+   FLUSSO — Speed Dial
+   ============================================================ */
+
+.f-speeddial-wrap {
+  position: fixed;
+  bottom: calc(62px + env(safe-area-inset-bottom));
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+}
+
+/* FAB principale */
+.f-fab {
+  width: 52px; height: 52px;
+  border-radius: 16px;
+  background: var(--f-emerald);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  font-size: 24px;
+  box-shadow: var(--f-fab-shadow);
+  transition:
+    background var(--f-dur-fast) var(--f-ease),
+    transform var(--f-dur-fast) var(--f-ease),
+    box-shadow var(--f-dur-fast) var(--f-ease);
+  position: relative;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+.f-fab:active {
+  transform: scale(.92);
+}
+.f-fab.open {
+  background: var(--f-forest);
+  box-shadow: 0 4px 16px rgba(13,43,30,.4);
+}
+
+/* Items sopra il FAB */
+.f-sd-items {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.f-sd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition:
+    opacity var(--f-dur-mid) var(--f-ease),
+    transform var(--f-dur-mid) var(--f-ease);
+}
+.f-sd-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+/* Stagger delay per ogni item */
+.f-sd-item[data-index="1"] { transition-delay: 0ms; }
+.f-sd-item[data-index="2"] { transition-delay: 60ms; }
+.f-sd-item[data-index="3"] { transition-delay: 120ms; }
+
+/* Label testo */
+.f-sd-label {
+  background: var(--f-sd-label-bg);
+  color: var(--f-sd-label-txt);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: var(--f-r-sm);
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,.22);
+}
+
+/* Bottone icona */
+.f-sd-btn {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  background: var(--f-sd-btn-bg);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--f-sd-btn-icon);
+  font-size: 20px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.2);
+  transition: opacity var(--f-dur-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+.f-sd-btn:active { opacity: .75; }
+
+/* Overlay scuro dietro speed-dial aperto */
+.f-sd-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13,43,30,0);
+  z-index: 49;
+  pointer-events: none;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+.f-sd-overlay.open {
+  background: rgba(13,43,30,.3);
+  pointer-events: auto;
+}
+
+/* ============================================================
+   FLUSSO — Bottom Navigation
+   ============================================================ */
+
+.f-bottom-nav {
+  display: flex;
+  padding: 7px 4px calc(10px + env(safe-area-inset-bottom));
+  background: var(--f-bg-nav);
+  border-top: .5px solid var(--f-bg-nav-border);
+  flex-shrink: 0;
+  z-index: 40;
+  position: relative;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+
+.f-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 4px 2px;
+  border-radius: var(--f-r-sm);
+  border: none;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--f-dur-fast);
+  position: relative;
+}
+.f-nav-item:active { opacity: .7; }
+
+.f-nav-icon {
+  font-size: 19px;
+  color: var(--f-text-muted);
+  transition: color var(--f-dur-fast);
+  line-height: 1;
+}
+.f-nav-label {
+  font-size: 9px;
+  color: var(--f-text-muted);
+  font-family: 'DM Sans', sans-serif;
+  transition: color var(--f-dur-fast);
+}
+
+/* Stato attivo */
+.f-nav-item.active .f-nav-icon { color: var(--f-emerald); }
+.f-nav-item.active .f-nav-label {
+  color: var(--f-emerald);
+  font-weight: 500;
+}
+
+/* Pill attiva sotto */
+.f-nav-pill {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--f-emerald);
+  opacity: 0;
+  transition: opacity var(--f-dur-fast);
+}
+.f-nav-item.active .f-nav-pill { opacity: 1; }
+
+/* ============================================================
+   FLUSSO — Topbar
+   ============================================================ */
+
+.f-topbar {
+  background: var(--f-bg-page);
+  /* padding-top gestito da fixes.css — evita doppio safe-area con app-header */
+  flex-shrink: 0;
+  z-index: 30;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
+
+.f-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.f-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--f-emerald);
+  letter-spacing: -.5px;
+  line-height: 1;
+}
+.f-logo em {
+  font-style: italic;
+}
+
+.f-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Badge "Solo locale" */
+.f-locale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239,159,39,.12);
+  border: .5px solid rgba(239,159,39,.3);
+  border-radius: var(--f-r-pill);
+  padding: 3px 10px;
+  font-size: 10px;
+  color: #854F0B;
+}
+[data-theme="dark"] .f-locale-badge,
+[data-theme="dark-grey"] .f-locale-badge {
+  background: rgba(239,159,39,.1);
+  color: var(--f-gold);
+  border-color: rgba(239,159,39,.2);
+}
+
+/* Icona menu hamburger */
+.f-menu-btn {
+  width: 34px; height: 34px;
+  border-radius: var(--f-r-sm);
+  background: var(--f-pill-green-bg);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--f-emerald);
+  font-size: 17px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--f-dur-fast);
+}
+.f-menu-btn:active { opacity: .7; }
+
+/* Period pills row */
+.f-period-row {
+  display: flex;
+  gap: 6px;
+  padding-bottom: 10px;
+}
+
+.f-period-pill {
+  background: var(--f-bg-card);
+  border: .5px solid var(--f-bg-card-border);
+  border-radius: var(--f-r-pill);
+  padding: 5px 12px;
+  font-size: 11px;
+  color: var(--f-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--f-dur-mid) var(--f-ease);
+}
