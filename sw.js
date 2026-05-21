@@ -1,22 +1,22 @@
-const CACHE = 'finance-manager-v4';
+const CACHE = 'flusso-v5';
 
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/style.css',
-  '/js/data.js',
-  '/js/utils.js',
-  '/js/images.js',
-  '/js/voice.js',
-  '/js/casa.js',
-  '/js/spesa.js',
-  '/js/intrattenimento.js',
-  '/js/veicoli.js',
-  '/js/finanze.js',
-  '/js/app.js',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './css/style.css',
+  './js/data.js',
+  './js/utils.js',
+  './js/images.js',
+  './js/voice.js',
+  './js/casa.js',
+  './js/spesa.js',
+  './js/intrattenimento.js',
+  './js/veicoli.js',
+  './js/finanze.js',
+  './js/app.js',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -38,18 +38,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // API → sempre network, mai cache
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(event.request).catch(() =>
-        new Response(JSON.stringify(null), { headers: { 'Content-Type': 'application/json' } })
-      )
-    );
-    return;
-  }
-
-  // JS e CSS → network-first: prende sempre la versione aggiornata dal server,
-  // aggiorna la cache, fallback a cache solo se offline
+  // JS e CSS → network-first
   if (url.pathname.match(/\.(js|css)$/)) {
     event.respondWith(
       fetch(event.request)
@@ -77,7 +66,6 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(() => null);
-
       return cached || networkFetch;
     })
   );
