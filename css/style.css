@@ -139,12 +139,12 @@ body.no-scroll { overflow:hidden; }
 [data-theme="dark"]      #app::before {
   background:
     radial-gradient(ellipse at 96% 0%,   rgba(var(--emerald-rgb),.22) 0%, transparent 38%),
-    radial-gradient(ellipse at -5% 105%, rgba(var(--emerald-rgb),.12) 0%, transparent 42%);
+    radial-gradient(ellipse at -5% 105%, rgba(210,183,118,.30)        0%, transparent 42%);
 }
 [data-theme="dark-grey"] #app::before {
   background:
     radial-gradient(ellipse at 96% 0%,   rgba(var(--emerald-rgb),.18) 0%, transparent 38%),
-    radial-gradient(ellipse at -5% 105%, rgba(var(--emerald-rgb),.10) 0%, transparent 42%);
+    radial-gradient(ellipse at -5% 105%, rgba(210,183,118,.20)        0%, transparent 42%);
 }
 
 /* ── Header / Topbar ──────────────────────────────────────── */
