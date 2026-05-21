@@ -149,7 +149,7 @@ const App = {
     const theme = document.documentElement.getAttribute('data-theme') || 'light';
     let isDark = theme === 'dark' || theme === 'dark-grey';
     let color = '#F4EFE4';
-    if (theme === 'dark') color = '#0f172a';
+    if (theme === 'dark') color = '#111C17';
     else if (theme === 'dark-grey') color = '#141414';
     else if (theme === 'custom') {
       const hex = localStorage.getItem('financeApp_customColor') || '#c7b8ea';
