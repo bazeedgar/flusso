@@ -169,6 +169,8 @@ const App = {
     // PWA / browser — aggiorna status bar e navigation bar
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) metaTheme.content = color;
+    // color-scheme segnala a Chrome il modo chiaro/scuro per la barra di navigazione
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
     // Edge-to-edge: imposta sfondo su html e body visibile dietro le barre di sistema
     document.documentElement.style.backgroundColor = color;
     document.body.style.backgroundColor = color;

@@ -12,7 +12,7 @@
 
 /* ── Reset ────────────────────────────────────────────────── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-html { overflow-anchor:none; -webkit-text-size-adjust:100%; }
+html { overflow-anchor:none; -webkit-text-size-adjust:100%; background-color:var(--bg); min-height:100dvh; }
 input,textarea { -webkit-user-select:text; user-select:text; }
 *::-webkit-scrollbar { display:none; }
 * { scrollbar-width:none; }
