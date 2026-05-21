@@ -421,10 +421,22 @@ const App = {
     const installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if (installed) return;
 
-    if (isIOS && isSafari) {
-      const hint = document.getElementById('install-ios-hint');
-      if (hint) hint.style.display = '';
+    const iosHint    = document.getElementById('install-ios-hint');
+    const manualHint = document.getElementById('install-manual-hint');
+
+    if (isIOS) {
+      // Su iOS nessun browser supporta beforeinstallprompt — solo Safari può installare
       if (btnOk) btnOk.style.display = 'none';
+      if (isSafari) {
+        if (iosHint) iosHint.style.display = '';
+      } else {
+        // Chrome/Firefox/Edge su iOS — suggerisci Safari
+        if (iosHint) {
+          iosHint.textContent = '';
+          iosHint.innerHTML = 'Per installare su iPhone apri questa pagina in <strong>Safari</strong>, poi tocca <strong>⎙ → Aggiungi a schermata Home</strong>';
+          iosHint.style.display = '';
+        }
+      }
     }
 
     setTimeout(() => { banner.style.display = ''; banner.classList.add('visible'); }, 1000);
@@ -436,9 +448,8 @@ const App = {
         deferredPrompt = null;
         banner.classList.remove('visible');
       } else {
-        // Prompt nativo non disponibile — mostra istruzioni manuali
-        const hint = document.getElementById('install-manual-hint');
-        if (hint) { hint.style.display = ''; btnOk.style.display = 'none'; }
+        if (manualHint) manualHint.style.display = '';
+        if (btnOk) btnOk.style.display = 'none';
       }
     });
     btnX?.addEventListener('click', () => banner.classList.remove('visible'));
