@@ -430,8 +430,16 @@ const App = {
     setTimeout(() => { banner.style.display = ''; banner.classList.add('visible'); }, 1000);
 
     btnOk?.addEventListener('click', async () => {
-      if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
-      banner.classList.remove('visible');
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        banner.classList.remove('visible');
+      } else {
+        // Prompt nativo non disponibile — mostra istruzioni manuali
+        const hint = document.getElementById('install-manual-hint');
+        if (hint) { hint.style.display = ''; btnOk.style.display = 'none'; }
+      }
     });
     btnX?.addEventListener('click', () => banner.classList.remove('visible'));
   },
