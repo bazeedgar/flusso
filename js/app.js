@@ -169,8 +169,9 @@ const App = {
     // PWA / browser — aggiorna status bar e navigation bar
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) metaTheme.content = color;
-    // Navigation bar (edge-to-edge): html background-color visibile dietro la nav bar di sistema
+    // Edge-to-edge: imposta sfondo su html e body visibile dietro le barre di sistema
     document.documentElement.style.backgroundColor = color;
+    document.body.style.backgroundColor = color;
 
     // App nativa Capacitor — usa plugin ThemeBars
     if (!window.Capacitor?.isNativePlatform?.()) return;
