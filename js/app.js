@@ -406,55 +406,34 @@ const App = {
   },
 
   _initInstallPrompt() {
-    // Non mostrare su app nativa Capacitor o già installata come PWA
     if (window.Capacitor?.isNativePlatform?.()) return;
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
-    if (window.navigator.standalone) return; // iOS già installata
 
-    const banner  = document.getElementById('install-banner');
-    const btnOk   = document.getElementById('install-btn-ok');
-    const btnX    = document.getElementById('install-btn-dismiss');
-    const iosHint = document.getElementById('install-ios-hint');
+    const banner = document.getElementById('install-banner');
+    const btnOk  = document.getElementById('install-btn-ok');
+    const btnX   = document.getElementById('install-btn-dismiss');
     if (!banner) return;
 
-    const show = () => {
-      banner.setAttribute('aria-hidden', 'false');
-      banner.classList.add('visible');
-    };
-    const hide = () => {
-      banner.classList.remove('visible');
-    };
-
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
     let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
 
-    // Cattura il prompt nativo se disponibile (Chrome/Edge/Opera/Samsung)
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-    });
+    const isIOS     = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isSafari  = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (installed) return;
 
-    // iOS Safari — mostra istruzioni manuali
-    if (isIOS && isSafari && iosHint) {
-      iosHint.style.display = '';
-      btnOk.style.display = 'none';
+    if (isIOS && isSafari) {
+      const hint = document.getElementById('install-ios-hint');
+      if (hint) hint.style.display = '';
+      if (btnOk) btnOk.style.display = 'none';
     }
 
-    // Mostra sempre il banner dopo 2.5s se non installata
-    setTimeout(show, 2500);
+    setTimeout(() => { banner.style.display = ''; banner.classList.add('visible'); }, 1000);
 
-    btnOk.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-      }
-      hide();
+    btnOk?.addEventListener('click', async () => {
+      if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+      banner.classList.remove('visible');
     });
-
-    btnX.addEventListener('click', () => hide());
+    btnX?.addEventListener('click', () => banner.classList.remove('visible'));
   },
 
   _initAutoTheme() {

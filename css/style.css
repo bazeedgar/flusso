@@ -1870,6 +1870,7 @@ textarea { resize:vertical; min-height:70px; }
   pointer-events:none;
 }
 .install-banner.visible {
+  display:block !important;
   transform:translateY(0);
   pointer-events:auto;
 }
