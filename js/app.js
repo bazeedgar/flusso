@@ -9,6 +9,11 @@ const App = {
     await DB.load();
     await ImageStore.loadCache();
 
+    // Disabilita pinch-to-zoom senza rompere lo scroll degli overflow interni
+    document.addEventListener('touchstart', e => {
+      if (e.touches.length >= 2) e.preventDefault();
+    }, { passive: false });
+
     this._initDarkMode();
     this._applyThemeToBars();
     Utils.initCustomSelects();
