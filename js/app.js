@@ -604,6 +604,17 @@ const App = {
 
     content.addEventListener('touchmove', e => {
       if (phase === 'idle') return;
+      if (e.touches.length > 1) {
+        if (phase === 'drag') {
+          cur.style.transition = adj.style.transition = '';
+          cur.style.transform  = 'translateX(0)';
+          adj.style.transform  = `translateX(${dir * W}px)`;
+          clearPanel(cur); clearPanel(adj);
+          content.style.height = content.style.overflow = content.style.clipPath = content.style.position = '';
+        }
+        phase = 'idle';
+        return;
+      }
       const dx = e.touches[0].clientX - sx;
       const dy = e.touches[0].clientY - sy;
 
