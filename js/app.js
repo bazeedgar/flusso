@@ -9,10 +9,23 @@ const App = {
     await DB.load();
     await ImageStore.loadCache();
 
-    // Disabilita pinch-to-zoom: blocca su touchmove (non touchstart) per non interferire con lo scroll
-    document.addEventListener('touchmove', e => {
-      if (e.touches.length >= 2) e.preventDefault();
-    }, { passive: false });
+    // Disabilita pinch-to-zoom e keyboard-zoom su iOS via viewport meta (JS è network-first, HTML è cache-first)
+    const _isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const _vp = document.querySelector('meta[name="viewport"]');
+    if (_vp) {
+      if (_isIOS) {
+        _vp.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+      } else {
+        _vp.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover';
+      }
+    }
+    // Blocca pinch su Android via touchmove (non touchstart — interferirebbe con lo scroll)
+    if (!_isIOS) {
+      document.addEventListener('touchmove', e => {
+        if (e.touches.length >= 2) e.preventDefault();
+      }, { passive: false });
+    }
 
     this._initDarkMode();
     this._applyThemeToBars();
