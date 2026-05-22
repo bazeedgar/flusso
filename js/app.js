@@ -9,8 +9,8 @@ const App = {
     await DB.load();
     await ImageStore.loadCache();
 
-    // Disabilita pinch-to-zoom senza rompere lo scroll degli overflow interni
-    document.addEventListener('touchstart', e => {
+    // Disabilita pinch-to-zoom: blocca su touchmove (non touchstart) per non interferire con lo scroll
+    document.addEventListener('touchmove', e => {
       if (e.touches.length >= 2) e.preventDefault();
     }, { passive: false });
 
@@ -603,6 +603,7 @@ const App = {
 
     content.addEventListener('touchstart', e => {
       if (e.touches.length !== 1 || phase !== 'idle') return;
+      if (e.target.closest('.f-tab-row')) return;
       sx = e.touches[0].clientX; sy = e.touches[0].clientY;
       phase = 'init';
     }, { passive: true });

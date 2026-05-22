@@ -519,6 +519,7 @@ body.no-scroll { overflow:hidden; }
   gap:4px;
   padding:0 0 10px;
   overflow-x:auto;
+  touch-action:pan-x;
 }
 .f-tab-btn {
   padding:5px 13px;
