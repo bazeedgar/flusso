@@ -4,10 +4,6 @@ const App = {
   modules: { casa: Casa, spesa: Spesa, intrattenimento: Intrattenimento, veicoli: Veicoli, finanze: Finanze, agenda: Agenda },
 
   async init() {
-    // Per primo, prima di qualunque await o altra inizializzazione: se fallisse
-    // o si bloccasse qualcosa più avanti, il tasto back resterebbe scollegato e
-    // ogni pressione chiuderebbe l'app.
-    this._initBackButton();
     Lang.init();
     // Carica dati (server → localStorage → default)
     await DB.load();
@@ -43,6 +39,7 @@ const App = {
     this._bindPeriodSelectors();
     this._bindSidebarSettings();
     this._bindImportInput();
+    this._initBackButton();
 
     for (const mod of Object.values(this.modules)) mod.init();
     this._activateTab('finanze');
@@ -118,101 +115,45 @@ const App = {
     } catch {}
   },
 
-  // ── Tasto Back Android ───────────────────────────────────────────────────
+  // ── Tasto Back Android (Capacitor) ───────────────────────────────────────
   _initBackButton() {
+    if (!window.Capacitor?.isNativePlatform?.()) return;
     const CapApp = window.Capacitor?.Plugins?.App;
-    if (window.Capacitor?.isNativePlatform?.() && CapApp) {
-      CapApp.addListener('backButton', () => {
-        if (this._handleBack()) return;
-        if (this._armExit()) return;
-        CapApp.exitApp();
-      });
-      return;
-    }
-    // PWA: qui il back di Android è una navigazione, non un evento dell'app.
-    // Teniamo in cronologia una voce "cuscinetto" da consumare a ogni back e
-    // la rimettiamo appena il gesto è stato gestito, così non si esce mai per
-    // sbaglio. Sulla home il cuscinetto NON viene rimesso: la cronologia resta
-    // vuota e il secondo back chiude davvero la PWA.
-    // Chrome scavalca col back le voci di cronologia inserite senza che
-    // l'utente abbia interagito: una spinta al caricamento verrebbe ignorata e
-    // il primo back chiuderebbe comunque la PWA. Quindi il cuscinetto lo
-    // mettiamo al primo tocco, che gli dà la validità che Chrome pretende.
-    // Senza questo il browser ripristina lo scroll salvato nella voce di
-    // cronologia a ogni back/forward, e la pagina schizza su e giù.
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    let buffered = false;
-    const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; };
-    // Dopo un back NON ne creiamo una nuova: nascerebbe anch'essa senza
-    // interazione e verrebbe scavalcata al back seguente. Torniamo invece
-    // avanti su quella già esistente, che resta nello stack in avanti.
-    const restore = () => { buffered = true; history.go(1); };
-    const ensure = () => {
-      if (buffered) return;
-      // Un tocco vuol dire anche che l'utente non sta uscendo: disarma
-      clearTimeout(this._exitTimer);
-      this._exitArmed = false;
-      push();
-    };
-    window.addEventListener('pointerdown', ensure, { passive: true });
-    window.addEventListener('keydown', ensure, { passive: true });
-    window.addEventListener('popstate', () => {
-      // Rientro sulla sentinella dopo il nostro go(1): non è un back dell'utente
-      if (history.state?.flusso) return;
-      buffered = false;                          // il cuscinetto è stato consumato
-      if (this._handleBack()) { restore(); return; }
-      // Uscita già confermata: non rimettere il cuscinetto, o intrappoleremmo
-      // l'utente impedendogli di uscire.
-      this._armExit(restore);
-    });
+    if (!CapApp) return;
+    CapApp.addListener('backButton', () => this._handleBack());
   },
 
   // Chiude i layer aperti dall'alto verso il basso.
-  // true = ha gestito il back, false = non c'è più niente da chiudere.
   _handleBack() {
     const id = (s) => document.getElementById(s);
     // Un elemento assente non è un layer aperto: senza questo controllo
     // !undefined?.contains('hidden') vale true e il back resta inghiottito.
     const open = (s) => { const el = id(s); return !!el && !el.classList.contains('hidden'); };
 
-    if (open('camera-overlay'))   { id('camera-cancel-btn')?.click(); return true; }
-    if (open('lightbox-overlay')) { Utils.closeLightbox?.();          return true; }
-    if (open('opts-overlay'))     { id('opts-close-btn')?.click();    return true; }
+    if (open('camera-overlay'))   { id('camera-cancel-btn')?.click(); return; }
+    if (open('lightbox-overlay')) { Utils.closeLightbox?.();          return; }
+    if (open('opts-overlay'))     { id('opts-close-btn')?.click();    return; }
     const lp = document.querySelector('.link-picker-overlay.open');
-    if (lp) { lp.querySelector('#lp-cancel')?.click(); return true; }
-    if (open('confirm-overlay'))  { id('confirm-no')?.click();        return true; }
-    if (open('modal-overlay'))    { Utils.closeModal?.();             return true; }
-    if (open('voice-panel'))      { VoiceCommand._closePanel?.();     return true; }
+    if (lp) { lp.querySelector('#lp-cancel')?.click(); return; }
+    if (open('confirm-overlay'))  { id('confirm-no')?.click();        return; }
+    if (open('modal-overlay'))    { Utils.closeModal?.();             return; }
+    if (open('voice-panel'))      { VoiceCommand._closePanel?.();     return; }
     // Ventaglio o azioni rapide aperti → chiude
-    if (this._fanOpen) { this._closeFan(); return true; }
-    if (VoiceCommand?._dialOpen) { VoiceCommand._closeDial(); return true; }
+    if (this._fanOpen) { this._closeFan(); return; }
+    if (VoiceCommand?._dialOpen) { VoiceCommand._closeDial(); return; }
     // Sidebar aperta su mobile → chiude (via _collapseSidebar: sblocca anche lo scroll)
     const sidebar = id('sidebar');
     if (sidebar && !sidebar.classList.contains('collapsed')) {
-      this._collapseSidebar?.(); return true;
+      this._collapseSidebar?.(); return;
     }
     // Tab non home → torna a Finanze
     if (this.currentTab !== 'finanze') {
-      this._activateTab('finanze'); return true;
+      this._activateTab('finanze'); return;
     }
     // Lock biometrico visibile → il back non deve poter uscire
-    if (open('biometric-lock')) return true;
-    return false;
-  },
-
-  // Primo back sulla home: avvisa e basta. Restituisce true se ha solo
-  // avvisato, false se l'uscita è confermata. `rearm` rimette il cuscinetto
-  // di cronologia se il secondo back non arriva in tempo (solo PWA).
-  _armExit(rearm) {
-    if (this._exitArmed) return false;
-    this._exitArmed = true;
-    Utils.showToast(Lang.t('back.exit'), 2000);
-    clearTimeout(this._exitTimer);
-    this._exitTimer = setTimeout(() => {
-      this._exitArmed = false;
-      rearm?.();
-    }, 2200);
-    return true;
+    if (open('biometric-lock')) return;
+    // Già su home → esce dall'app
+    window.Capacitor.Plugins.App.exitApp();
   },
 
   _applyThemeToBars() {
