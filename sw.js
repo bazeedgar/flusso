@@ -1,4 +1,4 @@
-const CACHE = 'flusso-v45';
+const CACHE = 'flusso-v46';
 
 const STATIC_ASSETS = [
   './',
@@ -38,19 +38,27 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
+  const networkFirst = req =>
+    fetch(req)
+      .then(response => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE).then(cache => cache.put(req, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(req));   // offline → si ripiega sulla cache
+
+  // Documento HTML → network-first: da cache-first un aggiornamento che tocca
+  // l'HTML arrivava solo al secondo avvio dell'app.
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('.html')) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
+
   // JS e CSS → network-first
   if (url.pathname.match(/\.(js|css)$/)) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE).then(cache => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
+    event.respondWith(networkFirst(event.request));
     return;
   }
 
