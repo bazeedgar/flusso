@@ -30,13 +30,9 @@ const VoiceCommand = {
             </svg>
           </button>
         </div>
-      </div>
-      <button id="speed-dial-main" class="speed-dial-main" title="${Lang.t('voice.quick')}">
-        <svg id="speed-dial-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="26" height="26">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>`;
+      </div>`;
     document.body.appendChild(dial);
+    // Il trigger (#speed-dial-main) è nella barra in basso, slot destro: vedi index.html
 
     // ── Voice Panel (bottom sheet) ────────────────────────────────────────────
     const panel = document.createElement('div');
@@ -94,6 +90,7 @@ const VoiceCommand = {
   _toggleDial() { this._dialOpen ? this._closeDial() : this._openDial(); },
 
   _openDial() {
+    App?._closeFan?.();               // le due aperture si escludono a vicenda
     this._dialOpen = true;
     const items = document.getElementById('speed-dial-items');
     if (items) { items.style.display = 'flex'; }
@@ -101,12 +98,15 @@ const VoiceCommand = {
       document.getElementById('speed-dial')?.classList.add('open');
     });
     document.getElementById('speed-dial-backdrop')?.classList.remove('hidden');
+    // La barra deve stare sopra il backdrop, altrimenti il trigger resta oscurato
+    document.getElementById('bottom-nav')?.classList.add('nav-open', 'dial-open');
   },
 
   _closeDial() {
     this._dialOpen = false;
     document.getElementById('speed-dial')?.classList.remove('open');
     document.getElementById('speed-dial-backdrop')?.classList.add('hidden');
+    document.getElementById('bottom-nav')?.classList.remove('nav-open', 'dial-open');
     const items = document.getElementById('speed-dial-items');
     if (items) {
       // Guard: only hide if dial wasn't re-opened before the callback fires

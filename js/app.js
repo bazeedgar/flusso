@@ -34,6 +34,7 @@ const App = {
     this._initModuleVisibility();
     this.refreshPeriodSelectors();
     this._bindTabNav();
+    this._initNavFan();
     this._bindTabSwipe();
     this._bindPeriodSelectors();
     this._bindSidebarSettings();
@@ -146,12 +147,13 @@ const App = {
     if (!id('voice-panel')?.classList.contains('hidden')) {
       VoiceCommand._closePanel?.(); return;
     }
-    // Sidebar aperta su mobile → chiude
+    // Ventaglio o azioni rapide aperti → chiude
+    if (this._fanOpen) { this._closeFan(); return; }
+    if (VoiceCommand?._dialOpen) { VoiceCommand._closeDial(); return; }
+    // Sidebar aperta su mobile → chiude (via _collapseSidebar: sblocca anche lo scroll)
     const sidebar = id('sidebar');
     if (sidebar && !sidebar.classList.contains('collapsed')) {
-      sidebar.classList.add('collapsed');
-      document.getElementById('sidebar-backdrop')?.classList.remove('visible');
-      localStorage.setItem('financeApp_sidebar', 'collapsed'); return;
+      this._collapseSidebar?.(); return;
     }
     // Tab non home → torna a Finanze
     if (this.currentTab !== 'finanze') {
@@ -614,6 +616,73 @@ const App = {
     }, { passive: true });
   },
 
+  // ── Ventaglio moduli (pulsante centrale della barra) ────────────────────────
+  _fanOpen: false,
+
+  _initNavFan() {
+    const btn      = document.getElementById('bnav-home-btn');
+    const fan      = document.getElementById('nav-fan');
+    const backdrop = document.getElementById('nav-fan-backdrop');
+    if (!btn || !fan) return;
+
+    btn.addEventListener('click', () => {
+      if (this._fanOpen) { this._closeFan(); return; }
+      // Su Finanze apre il ventaglio, da un modulo fa da tasto home
+      if (this.currentTab === 'finanze') this._openFan();
+      else this._activateTab('finanze');
+    });
+
+    backdrop?.addEventListener('click', () => this._closeFan());
+    backdrop?.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+    fan.querySelectorAll('.nav-fan-item[data-tab]').forEach(item => {
+      item.addEventListener('click', () => {
+        this._closeFan();
+        this._activateTab(item.dataset.tab);
+      });
+    });
+  },
+
+  // Dispone le voci su un arco sopra il pulsante centrale. Ricalcolato a ogni
+  // apertura perché i moduli nascosti cambiano il numero di voci visibili.
+  _layoutFan() {
+    const fan = document.getElementById('nav-fan');
+    if (!fan) return;
+    const items = [...fan.querySelectorAll('.nav-fan-item')].filter(el => el.style.display !== 'none');
+    // Arco stretto abbastanza da tenere anche le etichette degli estremi
+    // sopra il bordo della barra (270 gradi = dritto in alto).
+    const R = 138, START = 215, END = 325;
+    items.forEach((el, i) => {
+      const deg = items.length === 1 ? 270 : START + (END - START) * i / (items.length - 1);
+      const rad = deg * Math.PI / 180;
+      el.style.setProperty('--tx', `${(Math.cos(rad) * R).toFixed(1)}px`);
+      el.style.setProperty('--ty', `${(Math.sin(rad) * R).toFixed(1)}px`);
+      el.style.setProperty('--i', String(i));
+    });
+  },
+
+  _openFan() {
+    if (this._fanOpen) return;
+    VoiceCommand?._closeDial?.();
+    this._layoutFan();
+    this._fanOpen = true;
+    document.getElementById('nav-fan')?.classList.add('open');
+    document.getElementById('nav-fan-backdrop')?.classList.add('visible');
+    document.getElementById('bnav-home-btn')?.classList.add('open');
+    document.getElementById('bottom-nav')?.classList.add('nav-open');
+    Utils.lockScroll();
+  },
+
+  _closeFan() {
+    if (!this._fanOpen) return;
+    this._fanOpen = false;
+    document.getElementById('nav-fan')?.classList.remove('open');
+    document.getElementById('nav-fan-backdrop')?.classList.remove('visible');
+    document.getElementById('bnav-home-btn')?.classList.remove('open');
+    document.getElementById('bottom-nav')?.classList.remove('nav-open');
+    Utils.unlockScroll();
+  },
+
   _bindTabNav() {
     document.querySelectorAll('.sidebar-nav-btn[data-tab], .bottom-nav-btn[data-tab]').forEach(btn => {
       btn.addEventListener('click', () => this._activateTab(btn.dataset.tab));
@@ -759,6 +828,9 @@ const App = {
     this.currentTab = tabName;
     document.querySelectorAll('.sidebar-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
     document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+    // Il pulsante centrale è griglia su Finanze, casetta (torna alla home) altrove
+    document.getElementById('bnav-home-btn')?.classList.toggle('mode-home', tabName !== 'finanze');
+    this._closeFan();
     if (animate) {
       const goFwd   = TAB_ORDER.indexOf(tabName) > TAB_ORDER.indexOf(prevName);
       const cls     = goFwd ? 'tab-fwd' : 'tab-bwd';
@@ -1081,7 +1153,7 @@ const App = {
   _applyModuleVisibility(hidden) {
     ['casa','spesa','intrattenimento','veicoli','agenda'].forEach(tab => {
       const isHidden = hidden.includes(tab);
-      document.querySelectorAll(`.bottom-nav-btn[data-tab="${tab}"]`).forEach(btn => {
+      document.querySelectorAll(`.bottom-nav-btn[data-tab="${tab}"], .nav-fan-item[data-tab="${tab}"]`).forEach(btn => {
         btn.style.display = isHidden ? 'none' : '';
       });
       if (isHidden && this.currentTab === tab) this._activateTab('finanze');
