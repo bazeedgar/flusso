@@ -1583,6 +1583,7 @@ textarea { resize:vertical; min-height:70px; }
 .nav-fan-backdrop {
   position:fixed; inset:0;
   z-index:299;
+  touch-action:none;
   background:rgba(0,0,0,.45);
   backdrop-filter:blur(3px);
   -webkit-backdrop-filter:blur(3px);
@@ -1604,10 +1605,11 @@ textarea { resize:vertical; min-height:70px; }
 .nav-fan-item {
   position:absolute;
   left:0; bottom:0;
-  width:54px; height:54px;
-  margin:0 0 -27px -27px;            /* centra il pulsante sull'origine */
+  width:66px; height:66px;
+  margin:0 0 -33px -33px;            /* centra il pulsante sull'origine */
+  touch-action:none;                 /* il gesto lo gestiamo noi: rotazione */
   border:.5px solid var(--border);
-  border-radius:18px;
+  border-radius:22px;
   background:var(--surface);
   color:var(--mod-color, var(--emerald));
   display:flex; align-items:center; justify-content:center;
@@ -1625,9 +1627,11 @@ textarea { resize:vertical; min-height:70px; }
   pointer-events:auto;
   transition-delay:calc(var(--i,0) * 45ms);   /* apertura a cascata */
 }
+/* Durante la rotazione niente transizione, altrimenti le voci inseguono il dito */
+.nav-fan.dragging .nav-fan-item { transition:none; }
 .nav-fan-item:active { filter:brightness(.92); }
 .nav-fan-item .fan-ic { display:flex; }
-.nav-fan-item svg { width:24px; height:24px; display:block; }
+.nav-fan-item svg { width:29px; height:29px; display:block; }
 .nav-fan-item .fan-lb {
   position:absolute;
   top:100%;

@@ -618,6 +618,9 @@ const App = {
 
   // ── Ventaglio moduli (pulsante centrale della barra) ────────────────────────
   _fanOpen: false,
+  _fanG: null,          // geometria dell'arco calcolata all'apertura
+  _fanOffset: 0,        // rotazione corrente, in gradi
+  _fanDragged: false,   // distingue una rotazione da un tap su una voce
 
   _initNavFan() {
     const btn      = document.getElementById('bnav-home-btn');
@@ -632,33 +635,153 @@ const App = {
       else this._activateTab('finanze');
     });
 
-    backdrop?.addEventListener('click', () => this._closeFan());
+    backdrop?.addEventListener('click', () => {
+      if (this._fanDragged) { this._fanDragged = false; return; }
+      this._closeFan();
+    });
     backdrop?.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
     fan.querySelectorAll('.nav-fan-item[data-tab]').forEach(item => {
       item.addEventListener('click', () => {
+        if (this._fanDragged) { this._fanDragged = false; return; }
         this._closeFan();
         this._activateTab(item.dataset.tab);
       });
     });
+
+    // ── Rotazione dell'arco ────────────────────────────────────────────────
+    // Angolo del dito rispetto all'origine del ventaglio: trascinando lungo
+    // l'arco le voci lo seguono. Libera e continua, senza posizioni fisse,
+    // ma limitata alla prima e all'ultima voce (niente ciclo infinito).
+    const angleAt = (e) => {
+      const r = fan.getBoundingClientRect();
+      return Math.atan2(e.clientY - r.top, e.clientX - r.left) * 180 / Math.PI;
+    };
+    let dragging = false, lastA = 0, lastT = 0, vel = 0, raf = 0;
+
+    const onDown = (e) => {
+      if (!this._fanOpen) return;
+      cancelAnimationFrame(raf);
+      dragging = true; vel = 0;
+      this._fanDragged = false;
+      lastA = angleAt(e);
+      lastT = e.timeStamp;
+      fan.classList.add('dragging');
+    };
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      const a = angleAt(e);
+      let d = a - lastA;
+      if (d > 180) d -= 360; else if (d < -180) d += 360;   // salto ±180°
+      lastA = a;
+      const g = this._fanG;
+      if (!g) return;
+      // Oltre i limiti il trascinamento fa resistenza invece di bloccarsi netto
+      const past = this._fanOffset > g.max || this._fanOffset < g.min;
+      this._fanOffset += past ? d * 0.35 : d;
+      const dt = Math.max(1, e.timeStamp - lastT);
+      vel = Math.max(-14, Math.min(14, d / dt * 16));
+      lastT = e.timeStamp;
+      if (Math.abs(d) > 0.4) this._fanDragged = true;
+      this._renderFan(true);
+    };
+
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      fan.classList.remove('dragging');
+      const tick = () => {
+        const g = this._fanG;
+        if (!g || !this._fanOpen) return;
+        if (this._fanOffset > g.max)      { this._fanOffset += (g.max - this._fanOffset) * 0.22; vel = 0; }
+        else if (this._fanOffset < g.min) { this._fanOffset += (g.min - this._fanOffset) * 0.22; vel = 0; }
+        else { this._fanOffset += vel; vel *= 0.94; }   // scorre e rallenta, resta dov'è
+        this._renderFan(true);
+        const still = Math.abs(vel) < 0.04 &&
+                      this._fanOffset <= g.max + 0.15 && this._fanOffset >= g.min - 0.15;
+        if (!still) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+
+    fan.addEventListener('pointerdown', onDown);
+    backdrop?.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    // L'arco dipende dalla larghezza schermo: va rifatto se il device ruota
+    window.addEventListener('resize', () => {
+      if (!this._fanOpen) return;
+      this._fanG = this._computeFanGeom();
+      this._fanOffset = Math.max(this._fanG.min, Math.min(this._fanG.max, this._fanOffset));
+      this._renderFan(true);
+    });
   },
 
-  // Dispone le voci su un arco sopra il pulsante centrale. Ricalcolato a ogni
-  // apertura perché i moduli nascosti cambiano il numero di voci visibili.
+  // Stato della barra per la tab corrente. Lo usano sia _activateTab sia lo
+  // swipe orizzontale, che cambia tab senza passare da _activateTab: tenerlo
+  // in un posto solo evita che i due tornino a divergere.
+  _syncNavState(tabName) {
+    document.querySelectorAll('.sidebar-nav-btn, .bottom-nav-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === tabName));
+    // Il pulsante centrale è griglia su Finanze, casetta (torna alla home) altrove
+    document.getElementById('bnav-home-btn')?.classList.toggle('mode-home', tabName !== 'finanze');
+    this._closeFan();
+  },
+
+  // Geometria dell'arco. Ricalcolata a ogni apertura perché dipende sia dai
+  // moduli nascosti sia dalla larghezza schermo (rotazione del device inclusa).
+  _computeFanGeom() {
+    const fan = document.getElementById('nav-fan');
+    const items = [...fan.querySelectorAll('.nav-fan-item')].filter(el => el.style.display !== 'none');
+    const R = 150, ITEM = 66, GAP = 13;
+    const LABEL_DROP = 52;   // da centro voce al fondo della sua etichetta
+    const BAR_CLEAR  = 14;   // quanto il bordo alto della barra sta sopra il centro del pulsante
+    const EDGE = 10;
+    // Scostamento massimo da "dritto in alto" (270°): l'etichetta deve restare
+    // sopra la barra e la voce dentro lo schermo. Su schermi stretti vince il
+    // secondo limite, e le voci in eccesso si raggiungono ruotando.
+    const dVert  = Math.acos(Math.min(1, (LABEL_DROP + BAR_CLEAR) / R));
+    const dHoriz = Math.asin(Math.min(1, (window.innerWidth / 2 - ITEM / 2 - EDGE) / R));
+    const dMax   = Math.max(20, Math.min(dVert, dHoriz) * 180 / Math.PI);
+    const arcStart = 270 - dMax, arcEnd = 270 + dMax, span = arcEnd - arcStart;
+    const step    = 2 * Math.asin(Math.min(1, (ITEM + GAP) / (2 * R))) * 180 / Math.PI;
+    const content = (items.length - 1) * step;
+    const fits    = content <= span;
+    return {
+      items, R, step, arcStart, arcEnd,
+      // Se ci stanno tutte le centriamo e la rotazione è bloccata (resta solo
+      // il rimbalzo elastico); altrimenti si ruota tra la prima e l'ultima.
+      base: fits ? arcStart + (span - content) / 2 : arcStart,
+      min:  fits ? 0 : span - content,
+      max:  0,
+    };
+  },
+
+  _renderFan(fade) {
+    const g = this._fanG;
+    if (!g) return;
+    g.items.forEach((el, i) => {
+      const deg = g.base + i * g.step + this._fanOffset;
+      const rad = deg * Math.PI / 180;
+      el.style.setProperty('--tx', `${(Math.cos(rad) * g.R).toFixed(1)}px`);
+      el.style.setProperty('--ty', `${(Math.sin(rad) * g.R).toFixed(1)}px`);
+      const out = deg < g.arcStart - 6 || deg > g.arcEnd + 6;
+      // Fuori arco: nascosta e non cliccabile. Dentro, l'opacità la governa la
+      // classe .open, così l'apertura a cascata resta.
+      el.style.opacity = out ? '0' : (fade ? '1' : '');
+      el.style.pointerEvents = out ? 'none' : '';
+    });
+  },
+
   _layoutFan() {
     const fan = document.getElementById('nav-fan');
     if (!fan) return;
-    const items = [...fan.querySelectorAll('.nav-fan-item')].filter(el => el.style.display !== 'none');
-    // Arco stretto abbastanza da tenere anche le etichette degli estremi
-    // sopra il bordo della barra (270 gradi = dritto in alto).
-    const R = 138, START = 215, END = 325;
-    items.forEach((el, i) => {
-      const deg = items.length === 1 ? 270 : START + (END - START) * i / (items.length - 1);
-      const rad = deg * Math.PI / 180;
-      el.style.setProperty('--tx', `${(Math.cos(rad) * R).toFixed(1)}px`);
-      el.style.setProperty('--ty', `${(Math.sin(rad) * R).toFixed(1)}px`);
-      el.style.setProperty('--i', String(i));
-    });
+    this._fanG = this._computeFanGeom();
+    this._fanOffset = 0;
+    this._fanG.items.forEach((el, i) => el.style.setProperty('--i', String(i)));
+    this._renderFan(false);
   },
 
   _openFan() {
@@ -801,8 +924,7 @@ const App = {
           clearPanel(cur); clearPanel(adj);
           content.style.height = content.style.overflow = content.style.clipPath = content.style.position = '';
           this.currentTab = newTab;
-          document.querySelectorAll('.sidebar-nav-btn,.bottom-nav-btn').forEach(b =>
-            b.classList.toggle('active', b.dataset.tab === newTab));
+          this._syncNavState(newTab);
           phase = 'idle';
         }, T);
       } else {
@@ -826,11 +948,7 @@ const App = {
     const prevName = this.currentTab;
     const animate  = prevName !== tabName;
     this.currentTab = tabName;
-    document.querySelectorAll('.sidebar-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
-    document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
-    // Il pulsante centrale è griglia su Finanze, casetta (torna alla home) altrove
-    document.getElementById('bnav-home-btn')?.classList.toggle('mode-home', tabName !== 'finanze');
-    this._closeFan();
+    this._syncNavState(tabName);
     if (animate) {
       const goFwd   = TAB_ORDER.indexOf(tabName) > TAB_ORDER.indexOf(prevName);
       const cls     = goFwd ? 'tab-fwd' : 'tab-bwd';
