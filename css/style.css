@@ -173,30 +173,36 @@ body.no-scroll { position:fixed; left:0; right:0; overflow:hidden; }
 }
 .header-inner {
   display:grid;
-  grid-template-columns:1fr auto 1fr;
+  /* La colonna centrale può restringersi; le laterali occupano lo spazio che
+     serve. Prima la destra era in position:absolute e la griglia non le
+     riservava niente, così il badge finiva sopra i selettori. */
+  grid-template-columns:auto minmax(0,1fr) auto;
   align-items:center;
-  padding:8px 16px;
-  gap:8px;
+  padding:8px 12px;
+  gap:6px;
   position:relative;
 }
 .header-periods {
   display:flex;
-  gap:6px;
+  gap:5px;
   justify-content:center;
+  min-width:0;
 }
+/* La regola globale select{font-size:16px!important} (anti-zoom tastiera iOS)
+   sovrascriveva l'11px inline e allargava le pillole: qui la riportiamo. */
+.f-period-pill select { font-size:11px !important; }
 .header-left  { display:flex; align-items:center; gap:8px; }
 .header-right {
-  position:absolute;
-  right:16px;
-  top:0; bottom:0;
   display:flex;
   align-items:center;
+  justify-content:flex-end;
+  min-width:0;
 }
 
 /* Logo */
 .app-title {
   font-family:'DM Serif Display',serif;
-  font-size:24px;
+  font-size:21px;
   font-weight:400;
   color:var(--emerald);
   letter-spacing:-.3px;
@@ -220,11 +226,14 @@ body.no-scroll { position:fixed; left:0; right:0; overflow:hidden; }
 
 /* Save status */
 .save-status {
-  font-size:11px;
+  font-size:10px;
   font-weight:500;
-  padding:3px 10px;
+  padding:3px 8px;
   border-radius:var(--radius-pill);
   white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:80px;
   transition:all .3s;
 }
 .status-saving { background:#fef3c7; color:#92400e; }
@@ -259,15 +268,16 @@ body.no-scroll { position:fixed; left:0; right:0; overflow:hidden; }
   background:var(--surface);
   border:.5px solid var(--border);
   border-radius:var(--radius-pill);
-  padding:6px 14px;
+  padding:5px 10px;
   font-size:11px;
   color:var(--text);
   display:flex;
   align-items:center;
-  gap:4px;
+  gap:3px;
   cursor:pointer;
   line-height:1.4;
   min-height:unset;
+  min-width:0;
 }
 .period-chevron {
   width:10px;
