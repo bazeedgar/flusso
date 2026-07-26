@@ -138,6 +138,9 @@ const App = {
     // l'utente abbia interagito: una spinta al caricamento verrebbe ignorata e
     // il primo back chiuderebbe comunque la PWA. Quindi il cuscinetto lo
     // mettiamo al primo tocco, che gli dà la validità che Chrome pretende.
+    // Senza questo il browser ripristina lo scroll salvato nella voce di
+    // cronologia a ogni back/forward, e la pagina schizza su e giù.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     let buffered = false;
     const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; };
     // Dopo un back NON ne creiamo una nuova: nascerebbe anch'essa senza
