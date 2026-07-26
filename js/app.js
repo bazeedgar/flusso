@@ -554,13 +554,26 @@ const App = {
     // Swipe per chiudere la sidebar (scorri verso sinistra)
     const SIDEBAR_W = 240;
     const THRESHOLD = 60;
-    let tx0 = 0, ty0 = 0, swiping = false, dirLocked = false;
+    let tx0 = 0, ty0 = 0, swiping = false, dirLocked = false, scroller = null;
+
+    // Antenato scrollabile verticalmente dentro la sidebar (null = niente da scrollare)
+    const findScroller = (node) => {
+      while (node && node !== sidebar) {
+        if (node.scrollHeight > node.clientHeight + 1) {
+          const oy = getComputedStyle(node).overflowY;
+          if (oy === 'auto' || oy === 'scroll') return node;
+        }
+        node = node.parentElement;
+      }
+      return null;
+    };
 
     sidebar.addEventListener('touchstart', (e) => {
       if (sidebar.classList.contains('collapsed')) return;
       tx0 = e.touches[0].clientX;
       ty0 = e.touches[0].clientY;
       swiping = false; dirLocked = false;
+      scroller = findScroller(e.target);
     }, { passive: true });
 
     sidebar.addEventListener('touchmove', (e) => {
@@ -571,7 +584,13 @@ const App = {
         dirLocked = true;
         swiping = Math.abs(dx) > Math.abs(dy) && dx < 0;
       }
-      if (!swiping) return;
+      if (!swiping) {
+        // iOS ignora overflow:hidden sul body: senza un contenitore scrollabile sotto
+        // il dito, il gesto verticale trascinerebbe la pagina dietro la sidebar.
+        // Se invece c'è (menu lungo), lo scroll nativo resta + overscroll-behavior:contain.
+        if (!scroller) e.preventDefault();
+        return;
+      }
       e.preventDefault();
       const w = Math.max(0, SIDEBAR_W + dx);
       sidebar.style.transition = 'none';
