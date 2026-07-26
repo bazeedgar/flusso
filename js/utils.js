@@ -86,8 +86,13 @@ const Utils = {
   // Toast condiviso: riusa l'elemento creato da voice.js
   _toastTimer: null,
   showToast(msg, ms = 2600) {
-    const el = document.getElementById('voice-toast');
-    if (!el) return;
+    // Lo crea se manca: voice.js lo aggiunge solo se la sua init arriva in fondo
+    let el = document.getElementById('voice-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'voice-toast';
+      document.body.appendChild(el);
+    }
     el.textContent = msg;
     el.className = 'voice-toast voice-toast--visible';
     clearTimeout(this._toastTimer);
