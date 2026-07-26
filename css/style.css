@@ -1575,6 +1575,7 @@ textarea { resize:vertical; min-height:70px; }
   display:flex; align-items:center; justify-content:center;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
+  touch-action:none;                 /* la pressione prolungata la gestiamo noi */
   box-shadow:0 8px 22px rgba(var(--emerald-rgb),.42), inset 0 1px 0 rgba(255,255,255,.20);
   transition:box-shadow .2s, background .3s;
   z-index:2;
@@ -1673,6 +1674,12 @@ textarea { resize:vertical; min-height:70px; }
 }
 /* Durante la rotazione niente transizione, altrimenti le voci inseguono il dito */
 .nav-fan.dragging .nav-fan-item { transition:none; }
+/* Voce sotto il dito durante la pressione prolungata */
+.nav-fan.open .nav-fan-item.hover {
+  transform:translate(var(--tx,0), var(--ty,0)) scale(1.16);
+  border-color:var(--mod-color, var(--emerald));
+  box-shadow:0 16px 36px rgba(0,0,0,.32);
+}
 .nav-fan-item:active { filter:brightness(.94); }
 .nav-fan-item .fan-ic { display:flex; color:var(--mod-color, var(--emerald)); }
 .nav-fan-item svg { width:26px; height:26px; display:block; }

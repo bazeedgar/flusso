@@ -641,11 +641,82 @@ const App = {
     if (!btn || !fan) return;
 
     btn.addEventListener('click', () => {
+      // Dopo una pressione prolungata il click non deve fare nulla, o
+      // richiuderebbe subito il ventaglio appena aperto tenendo premuto.
+      if (this._fanHeld) { this._fanHeld = false; return; }
       if (this._fanOpen) { this._closeFan(); return; }
       // Su Finanze apre il ventaglio, da un modulo fa da tasto home
       if (this.currentTab === 'finanze') this._openFan();
       else this._activateTab('finanze');
     });
+
+    // ── Pressione prolungata: apre il ventaglio e si scorre fino alla voce ──
+    // Tieni premuto il centrale, trascina sulla voce e rilascia: un solo
+    // gesto invece di due tocchi (home, poi ventaglio).
+    let holdTimer = 0, holding = false, hovered = null;
+
+    // Voce più vicina al dito entro un raggio di aggancio. Meglio di
+    // elementFromPoint: la barra sta sopra il ventaglio, quindi le voci basse
+    // non sarebbero raggiungibili, e non serve centrarle con precisione.
+    const itemNear = (x, y) => {
+      const g = this._fanG;
+      if (!g) return null;
+      // Posizioni finali calcolate dall'origine + --tx/--ty, non i rect vivi:
+      // durante l'apertura le voci sono ancora ammassate al centro e
+      // l'aggancio punterebbe a posizioni intermedie.
+      const o = fan.getBoundingClientRect();
+      let best = null, bestD = 64;
+      g.items.forEach(el => {
+        if (el.style.display === 'none') return;
+        const tx = parseFloat(el.style.getPropertyValue('--tx')) || 0;
+        const ty = parseFloat(el.style.getPropertyValue('--ty')) || 0;
+        const d = Math.hypot(x - (o.left + tx), y - (o.top + ty));
+        if (d < bestD) { bestD = d; best = el; }
+      });
+      return best;
+    };
+
+    const setHover = (el) => {
+      if (hovered === el) return;
+      hovered?.classList.remove('hover');
+      hovered = el;
+      hovered?.classList.add('hover');
+      this._fanHover = el;
+    };
+
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    btn.addEventListener('pointerdown', () => {
+      if (this._fanOpen) return;          // già aperto: se ne occupa il click
+      holding = false;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        holding = true;
+        this._fanHeld = true;
+        this._openFan();
+      }, 320);
+    });
+
+    const holdMove = (e) => {
+      if (!holding) return;
+      e.preventDefault();
+      setHover(itemNear(e.clientX, e.clientY));
+    };
+
+    const holdEnd = () => {
+      clearTimeout(holdTimer);
+      if (!holding) return;
+      holding = false;
+      const target = hovered;
+      setHover(null);
+      // Rilasciato sopra una voce → ci si va. Rilasciato altrove il ventaglio
+      // resta aperto, così si può ancora scegliere con un tocco.
+      if (target) { this._closeFan(); this._activateTab(target.dataset.tab); }
+    };
+
+    window.addEventListener('pointermove', holdMove, { passive: false });
+    window.addEventListener('pointerup', holdEnd);
+    window.addEventListener('pointercancel', holdEnd);
 
     backdrop?.addEventListener('click', () => {
       if (this._fanDragged) { this._fanDragged = false; return; }
