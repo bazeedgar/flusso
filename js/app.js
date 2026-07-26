@@ -121,7 +121,17 @@ const App = {
   _initBackButton() {
     const CapApp = window.Capacitor?.Plugins?.App;
     if (window.Capacitor?.isNativePlatform?.() && CapApp) {
-      CapApp.addListener('backButton', () => { if (!this._handleBack()) CapApp.exitApp(); });
+      CapApp.addListener('backButton', () => {
+        if (this._handleBack()) return;
+        if (!this._exitArmed) {
+          this._exitArmed = true;
+          Utils.showToast(Lang.t('back.exit'), 2000);
+          clearTimeout(this._exitTimer);
+          this._exitTimer = setTimeout(() => { this._exitArmed = false; }, 2200);
+          return;
+        }
+        CapApp.exitApp();
+      });
       return;
     }
     // PWA: qui il back è una navigazione, non un evento dell'app. Teniamo in
@@ -138,9 +148,17 @@ const App = {
     const ensure = () => { if (!buffered || !history.state?.flusso) push(); };
     window.addEventListener('pointerdown', ensure, { passive: true });
     window.addEventListener('keydown', ensure, { passive: true });
+    // Sulla home non c'è niente da chiudere: avvisiamo e NON rimettiamo il
+    // cuscinetto, così il secondo back trova la cronologia vuota e Android
+    // chiude la PWA. Se il secondo non arriva, il cuscinetto torna da sé e
+    // l'avviso si riarma. Un tocco lo rimette prima, via ensure().
+    let exitTimer = 0;
     window.addEventListener('popstate', () => {
       buffered = false;
-      if (this._handleBack()) push();
+      if (this._handleBack()) { push(); return; }
+      Utils.showToast(Lang.t('back.exit'), 2000);
+      clearTimeout(exitTimer);
+      exitTimer = setTimeout(() => { if (!buffered) push(); }, 2200);
     });
   },
 
