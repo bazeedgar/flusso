@@ -118,27 +118,7 @@ const App = {
   },
 
   // ── Tasto Back Android ───────────────────────────────────────────────────
-  // DIAGNOSTICA TEMPORANEA del tasto back — da rimuovere.
-  // Scrive su localStorage perché se l'app si chiude non resta niente a video.
-  // I = agganciato, P = voce di cronologia creata, B = back ricevuto,
-  // H = back gestito (layer chiuso o ritorno a Finanze).
-  _backLog(c) {
-    try {
-      const k = 'flusso_backdbg';
-      localStorage.setItem(k, ((localStorage.getItem(k) || '') + c).slice(-40));
-    } catch {}
-  },
-
-  _showBackLog() {
-    try {
-      const v = localStorage.getItem('flusso_backdbg');
-      localStorage.removeItem('flusso_backdbg');
-      if (v) setTimeout(() => Utils.showToast('BACK: ' + v, 9000), 1500);
-    } catch {}
-  },
-
   _initBackButton() {
-    this._showBackLog();
     const CapApp = window.Capacitor?.Plugins?.App;
     if (window.Capacitor?.isNativePlatform?.() && CapApp) {
       CapApp.addListener('backButton', () => { if (!this._handleBack()) CapApp.exitApp(); });
@@ -150,7 +130,7 @@ const App = {
     // niente da chiudere: non la rimettiamo e il back esce dall'app.
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     let buffered = false;
-    const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; this._backLog('P'); };
+    const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; };
     // Chrome scavalca col back le voci create senza interazione dell'utente,
     // quindi la prima la mettiamo al primo tocco.
     // Ricontrolla anche la cronologia vera: se Chrome ha scartato la voce che
@@ -159,11 +139,9 @@ const App = {
     window.addEventListener('pointerdown', ensure, { passive: true });
     window.addEventListener('keydown', ensure, { passive: true });
     window.addEventListener('popstate', () => {
-      App._backLog('B');
       buffered = false;
-      if (this._handleBack()) { push(); App._backLog('H'); }
+      if (this._handleBack()) push();
     });
-    this._backLog('I');
   },
 
   // Chiude i layer aperti dall'alto verso il basso.
@@ -872,11 +850,26 @@ const App = {
     let sx = 0, sy = 0, phase = 'idle', cur = null, adj = null, dir = 0, W = 0;
     let padL = 0, padT = 0, padR = 0;
 
+    let settleTimer = 0;
+
     const clearPanel = p => {
       if (!p) return;
       ['display','boxSizing','paddingTop','paddingLeft','paddingRight',
        'position','top','left','width','transform','transition'].forEach(k => p.style[k] = '');
     };
+
+    // Annulla uno swipe in corso e riporta i pannelli al flusso normale.
+    // Durante lo swipe i due pannelli sono visibili per stile inline, non per
+    // la classe .active: senza questa pulizia _activateTab ne lascerebbe uno
+    // dipinto sopra l'altro, e il timer pendente riscriverebbe currentTab.
+    const reset = () => {
+      clearTimeout(settleTimer); settleTimer = 0;
+      clearPanel(cur); clearPanel(adj);
+      cur = adj = null;
+      content.style.height = content.style.overflow = content.style.clipPath = content.style.position = '';
+      phase = 'idle';
+    };
+    this._cancelTabSwipe = reset;
 
     content.addEventListener('touchstart', e => {
       if (e.touches.length !== 1 || phase !== 'idle') return;
@@ -902,8 +895,10 @@ const App = {
       const dy = e.touches[0].clientY - sy;
 
       if (phase === 'init') {
-        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-        if (Math.abs(dy) >= Math.abs(dx)) { phase = 'idle'; return; }
+        if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+        // Serve un'intenzione orizzontale netta: con 6px e un semplice dx>dy
+        // bastava uno scroll un filo obliquo per far partire lo swipe.
+        if (Math.abs(dx) < Math.abs(dy) * 1.5) { phase = 'idle'; return; }
 
         const hidden = this._getHiddenModules();
         const order  = ALL.filter(t => t === 'finanze' || !hidden.includes(t));
@@ -968,26 +963,20 @@ const App = {
       if (snap) {
         cur.style.transform = `translateX(${-dir * W}px)`;
         adj.style.transform = 'translateX(0)';
-        setTimeout(() => {
+        settleTimer = setTimeout(() => {
           const hidden = this._getHiddenModules();
           const order  = ALL.filter(t => t === 'finanze' || !hidden.includes(t));
           const newTab = order[order.indexOf(this.currentTab) + dir];
           cur.classList.remove('active');
           adj.classList.add('active');
-          clearPanel(cur); clearPanel(adj);
-          content.style.height = content.style.overflow = content.style.clipPath = content.style.position = '';
           this.currentTab = newTab;
+          reset();
           this._syncNavState(newTab);
-          phase = 'idle';
         }, T);
       } else {
         cur.style.transform = 'translateX(0)';
         adj.style.transform = `translateX(${dir * W}px)`;
-        setTimeout(() => {
-          clearPanel(cur); clearPanel(adj);
-          content.style.height = content.style.overflow = content.style.clipPath = content.style.position = '';
-          phase = 'idle';
-        }, T);
+        settleTimer = setTimeout(reset, T);
       }
     };
 
@@ -996,6 +985,9 @@ const App = {
   },
 
   _activateTab(tabName) {
+    // Uno swipe in corso tiene due pannelli visibili con stili inline e ha un
+    // timer che riscriverebbe currentTab: va annullato prima di animare.
+    this._cancelTabSwipe?.();
     const TAB_ORDER = ['finanze','casa','spesa','intrattenimento','veicoli','agenda'];
     if (tabName !== 'finanze' && this._getHiddenModules().includes(tabName)) tabName = 'finanze';
     const prevName = this.currentTab;
