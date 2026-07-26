@@ -4,6 +4,9 @@ const App = {
   modules: { casa: Casa, spesa: Spesa, intrattenimento: Intrattenimento, veicoli: Veicoli, finanze: Finanze, agenda: Agenda },
 
   async init() {
+    // Per primo: non dipende da nulla, e se qualcosa più avanti fallisse o si
+    // bloccasse il back resterebbe scollegato e ogni pressione chiuderebbe l'app.
+    this._initBackButton();
     Lang.init();
     // Carica dati (server → localStorage → default)
     await DB.load();
@@ -39,7 +42,6 @@ const App = {
     this._bindPeriodSelectors();
     this._bindSidebarSettings();
     this._bindImportInput();
-    this._initBackButton();
 
     for (const mod of Object.values(this.modules)) mod.init();
     this._activateTab('finanze');
