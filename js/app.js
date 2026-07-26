@@ -133,6 +133,18 @@ const App = {
     // vuota e il secondo back chiude davvero la PWA.
     const push = () => history.pushState({ flusso: 1 }, '');
     push();
+    // Chrome scavalca col back le voci di cronologia inserite senza che
+    // l'utente abbia interagito, quindi quella spinta qui sopra da sola può
+    // venire ignorata: la riposizioniamo al primo tocco, che le dà validità.
+    // Un tocco significa anche che l'utente non sta uscendo: disarma l'uscita.
+    const ensure = () => {
+      if (history.state?.flusso) return;
+      clearTimeout(this._exitTimer);
+      this._exitArmed = false;
+      push();
+    };
+    window.addEventListener('pointerdown', ensure, { passive: true });
+    window.addEventListener('keydown', ensure, { passive: true });
     window.addEventListener('popstate', () => {
       if (this._handleBack()) { push(); return; }
       // Uscita già confermata: non rimettere il cuscinetto, o intrappoleremmo
