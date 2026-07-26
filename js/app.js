@@ -118,7 +118,27 @@ const App = {
   },
 
   // ── Tasto Back Android ───────────────────────────────────────────────────
+  // DIAGNOSTICA TEMPORANEA del tasto back — da rimuovere.
+  // Scrive su localStorage perché se l'app si chiude non resta niente a video.
+  // I = agganciato, P = voce di cronologia creata, B = back ricevuto,
+  // H = back gestito (layer chiuso o ritorno a Finanze).
+  _backLog(c) {
+    try {
+      const k = 'flusso_backdbg';
+      localStorage.setItem(k, ((localStorage.getItem(k) || '') + c).slice(-40));
+    } catch {}
+  },
+
+  _showBackLog() {
+    try {
+      const v = localStorage.getItem('flusso_backdbg');
+      localStorage.removeItem('flusso_backdbg');
+      if (v) setTimeout(() => Utils.showToast('BACK: ' + v, 9000), 1500);
+    } catch {}
+  },
+
   _initBackButton() {
+    this._showBackLog();
     const CapApp = window.Capacitor?.Plugins?.App;
     if (window.Capacitor?.isNativePlatform?.() && CapApp) {
       CapApp.addListener('backButton', () => { if (!this._handleBack()) CapApp.exitApp(); });
@@ -130,16 +150,20 @@ const App = {
     // niente da chiudere: non la rimettiamo e il back esce dall'app.
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     let buffered = false;
-    const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; };
+    const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; this._backLog('P'); };
     // Chrome scavalca col back le voci create senza interazione dell'utente,
     // quindi la prima la mettiamo al primo tocco.
-    const ensure = () => { if (!buffered) push(); };
+    // Ricontrolla anche la cronologia vera: se Chrome ha scartato la voce che
+    // avevamo rimesso, qui lo si vede e se ne crea una valida.
+    const ensure = () => { if (!buffered || !history.state?.flusso) push(); };
     window.addEventListener('pointerdown', ensure, { passive: true });
     window.addEventListener('keydown', ensure, { passive: true });
     window.addEventListener('popstate', () => {
+      App._backLog('B');
       buffered = false;
-      if (this._handleBack()) push();
+      if (this._handleBack()) { push(); App._backLog('H'); }
     });
+    this._backLog('I');
   },
 
   // Chiude i layer aperti dall'alto verso il basso.
