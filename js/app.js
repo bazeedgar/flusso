@@ -131,14 +131,15 @@ const App = {
     // la rimettiamo appena il gesto è stato gestito, così non si esce mai per
     // sbaglio. Sulla home il cuscinetto NON viene rimesso: la cronologia resta
     // vuota e il secondo back chiude davvero la PWA.
-    const push = () => history.pushState({ flusso: 1 }, '');
-    push();
     // Chrome scavalca col back le voci di cronologia inserite senza che
-    // l'utente abbia interagito, quindi quella spinta qui sopra da sola può
-    // venire ignorata: la riposizioniamo al primo tocco, che le dà validità.
-    // Un tocco significa anche che l'utente non sta uscendo: disarma l'uscita.
+    // l'utente abbia interagito: una spinta al caricamento verrebbe ignorata e
+    // il primo back chiuderebbe comunque la PWA. Quindi il cuscinetto lo
+    // mettiamo al primo tocco, che gli dà la validità che Chrome pretende.
+    let buffered = false;
+    const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; };
     const ensure = () => {
-      if (history.state?.flusso) return;
+      if (buffered) return;
+      // Un tocco vuol dire anche che l'utente non sta uscendo: disarma
       clearTimeout(this._exitTimer);
       this._exitArmed = false;
       push();
@@ -146,6 +147,7 @@ const App = {
     window.addEventListener('pointerdown', ensure, { passive: true });
     window.addEventListener('keydown', ensure, { passive: true });
     window.addEventListener('popstate', () => {
+      buffered = false;                          // il cuscinetto è stato consumato
       if (this._handleBack()) { push(); return; }
       // Uscita già confermata: non rimettere il cuscinetto, o intrappoleremmo
       // l'utente impedendogli di uscire.
