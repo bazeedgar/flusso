@@ -657,7 +657,7 @@ const App = {
       const r = fan.getBoundingClientRect();
       return Math.atan2(r.top - e.clientY, e.clientX - r.left) * 180 / Math.PI;
     };
-    const clamp = (v) => Math.max(this._fanG.min, Math.min(this._fanG.max, v));
+    const OVER = 6;    // sconfinamento massimo consentito mentre si trascina
     let dragging = false, lastA = 0, lastT = 0, vel = 0, moved = 0, raf = 0;
 
     const onDown = (e) => {
@@ -677,7 +677,12 @@ const App = {
       let d = a - lastA;
       if (d > 180) d -= 360; else if (d < -180) d += 360;   // salto ±180°
       lastA = a;
-      this._fanOffset = clamp(this._fanOffset + d);
+      const g = this._fanG;
+      // Oltre il limite il dito trascina al 30%, e comunque mai oltre OVER:
+      // così le voci non escono mai davvero dallo schermo.
+      const past = this._fanOffset > g.max || this._fanOffset < g.min;
+      const next = this._fanOffset + (past ? d * 0.3 : d);
+      this._fanOffset = Math.max(g.min - OVER, Math.min(g.max + OVER, next));
       moved += Math.abs(d);
       const dt = Math.max(1, e.timeStamp - lastT);
       vel = Math.max(-14, Math.min(14, d / dt * 16));
@@ -691,12 +696,26 @@ const App = {
       dragging = false;
       fan.classList.remove('dragging');
       const tick = () => {
-        if (!this._fanG || !this._fanOpen) return;
-        vel *= 0.93;
-        if (Math.abs(vel) <= 0.05) return;    // scorre, rallenta e resta dov'è
-        this._fanOffset = clamp(this._fanOffset + vel);
+        const g = this._fanG;
+        if (!g || !this._fanOpen) return;
+        let done = false;
+        if (this._fanOffset > g.max || this._fanOffset < g.min) {
+          // Sconfinato: l'inerzia non conta più, torna al bordo con una molla
+          vel = 0;
+          const target = this._fanOffset > g.max ? g.max : g.min;
+          const diff = target - this._fanOffset;
+          if (Math.abs(diff) < 0.1) { this._fanOffset = target; done = true; }
+          else this._fanOffset += diff * 0.25;
+        } else {
+          this._fanOffset += vel;
+          vel *= 0.93;
+          // Un lancio si ferma al bordo invece di sparare le voci fuori campo
+          if (this._fanOffset > g.max)      { this._fanOffset = g.max; vel = 0; done = true; }
+          else if (this._fanOffset < g.min) { this._fanOffset = g.min; vel = 0; done = true; }
+          else if (Math.abs(vel) < 0.05) done = true;
+        }
         this._renderFan();
-        raf = requestAnimationFrame(tick);
+        if (!done) raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     };
@@ -710,7 +729,7 @@ const App = {
     window.addEventListener('resize', () => {
       if (!this._fanOpen) return;
       this._fanG = this._computeFanGeom();
-      this._fanOffset = clamp(this._fanOffset);
+      this._fanOffset = Math.max(this._fanG.min, Math.min(this._fanG.max, this._fanOffset));
       this._renderFan();
     });
   },
@@ -733,13 +752,24 @@ const App = {
   _computeFanGeom() {
     const fan = document.getElementById('nav-fan');
     const items = [...fan.querySelectorAll('.nav-fan-item')].filter(el => el.style.display !== 'none');
-    const R = 165, STEP = 36;
-    return {
-      items, R, STEP,
-      start: 90 + (items.length - 1) * STEP / 2,   // arco centrato sulla verticale
-      min: -160, max: 160,                         // corsa fissa: si ruota sempre
-      visFrom: -25, visTo: 205,                    // fuori da qui la voce sbiadisce
-    };
+    const STEP = 36, HALF = 41, EDGE = 12, DIP = 20;
+    const start = 90 + (items.length - 1) * STEP / 2;   // arco centrato sulla verticale
+    const last  = start - (items.length - 1) * STEP;
+    // Raggio ridotto quanto basta perché a riposo le voci esterne stiano dentro
+    // lo schermo: su un telefono stretto l'arco si stringe invece di sbordare.
+    const room  = window.innerWidth / 2 - HALF - EDGE;
+    const spread = Math.abs(Math.cos(start * Math.PI / 180)) || 1;
+    const R = Math.max(130, Math.min(165, room / spread));
+    // Finestra angolare in cui una voce resta davvero visibile: dentro i bordi
+    // laterali dello schermo, e non affondata nella barra oltre DIP px.
+    const loH = Math.acos(Math.min(1, (window.innerWidth / 2 - HALF - EDGE) / R)) * 180 / Math.PI;
+    const loV = Math.asin(Math.min(1, (HALF - DIP + 14) / R)) * 180 / Math.PI;
+    const lo  = Math.max(loH, loV), hi = 180 - lo;
+    // Corsa: da "prima voce al bordo alto" a "ultima voce al bordo basso".
+    // Se le voci ci stanno tutte i due estremi si invertono, e l'intervallo
+    // diventa il gioco elastico attorno allo zero — in entrambi i casi min<max.
+    const a = hi - start, b = lo - last;
+    return { items, R, STEP, start, lo, hi, min: Math.min(a, b), max: Math.max(a, b) };
   },
 
   _renderFan() {
@@ -748,7 +778,7 @@ const App = {
     g.items.forEach((el, i) => {
       const deg = g.start - i * g.STEP + this._fanOffset;
       const rad = deg * Math.PI / 180;
-      const vis = deg > g.visFrom && deg < g.visTo;
+      const vis = deg >= g.lo - 0.5 && deg <= g.hi + 0.5;
       el.style.setProperty('--tx', `${(Math.cos(rad) * g.R).toFixed(1)}px`);
       el.style.setProperty('--ty', `${(-Math.sin(rad) * g.R).toFixed(1)}px`);
       // Fuori campo non sparisce: rimpicciolisce e sbiadisce, così si vede
@@ -762,7 +792,7 @@ const App = {
     const fan = document.getElementById('nav-fan');
     if (!fan) return;
     this._fanG = this._computeFanGeom();
-    this._fanOffset = 0;
+    this._fanOffset = Math.max(this._fanG.min, Math.min(this._fanG.max, 0));
     this._fanG.items.forEach((el, i) => el.style.setProperty('--i', String(i)));
     this._renderFan();
   },
