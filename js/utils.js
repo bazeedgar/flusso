@@ -83,6 +83,17 @@ const Utils = {
     window.scrollTo(0, this._scrollY);
   },
 
+  // Toast condiviso: riusa l'elemento creato da voice.js
+  _toastTimer: null,
+  showToast(msg, ms = 2600) {
+    const el = document.getElementById('voice-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'voice-toast voice-toast--visible';
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => { el.className = 'voice-toast hidden'; }, ms);
+  },
+
   // Show modal (attachId: pass entry id or temp id to enable attachment section)
   showModal(title, bodyHtml, onSubmit, attachId = null) {
     if (this._modalCloseTimer) { clearTimeout(this._modalCloseTimer); this._modalCloseTimer = null; }

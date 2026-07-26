@@ -115,54 +115,78 @@ const App = {
     } catch {}
   },
 
-  // ── Tasto Back Android (Capacitor) ───────────────────────────────────────
+  // ── Tasto Back Android ───────────────────────────────────────────────────
   _initBackButton() {
-    if (!window.Capacitor?.isNativePlatform?.()) return;
     const CapApp = window.Capacitor?.Plugins?.App;
-    if (!CapApp) return;
-    CapApp.addListener('backButton', () => this._handleBack());
+    if (window.Capacitor?.isNativePlatform?.() && CapApp) {
+      CapApp.addListener('backButton', () => {
+        if (this._handleBack()) return;
+        if (this._armExit()) return;
+        CapApp.exitApp();
+      });
+      return;
+    }
+    // PWA: qui il back di Android è una navigazione, non un evento dell'app.
+    // Teniamo in cronologia una voce "cuscinetto" da consumare a ogni back e
+    // la rimettiamo appena il gesto è stato gestito, così non si esce mai per
+    // sbaglio. Sulla home il cuscinetto NON viene rimesso: la cronologia resta
+    // vuota e il secondo back chiude davvero la PWA.
+    const push = () => history.pushState({ flusso: 1 }, '');
+    push();
+    window.addEventListener('popstate', () => {
+      if (this._handleBack()) { push(); return; }
+      // Uscita già confermata: non rimettere il cuscinetto, o intrappoleremmo
+      // l'utente impedendogli di uscire.
+      this._armExit(push);
+    });
   },
 
+  // Chiude i layer aperti dall'alto verso il basso.
+  // true = ha gestito il back, false = non c'è più niente da chiudere.
   _handleBack() {
-    // Chiude i layer aperti dall'alto verso il basso
     const id = (s) => document.getElementById(s);
+    // Un elemento assente non è un layer aperto: senza questo controllo
+    // !undefined?.contains('hidden') vale true e il back resta inghiottito.
+    const open = (s) => { const el = id(s); return !!el && !el.classList.contains('hidden'); };
 
-    if (!id('camera-overlay')?.classList.contains('hidden')) {
-      id('camera-cancel-btn')?.click(); return;
-    }
-    if (!id('lightbox-overlay')?.classList.contains('hidden')) {
-      Utils.closeLightbox?.(); return;
-    }
-    if (!id('opts-overlay')?.classList.contains('hidden')) {
-      id('opts-close-btn')?.click(); return;
-    }
+    if (open('camera-overlay'))   { id('camera-cancel-btn')?.click(); return true; }
+    if (open('lightbox-overlay')) { Utils.closeLightbox?.();          return true; }
+    if (open('opts-overlay'))     { id('opts-close-btn')?.click();    return true; }
     const lp = document.querySelector('.link-picker-overlay.open');
-    if (lp) { lp.querySelector('#lp-cancel')?.click(); return; }
-    if (!id('confirm-overlay')?.classList.contains('hidden')) {
-      id('confirm-no')?.click(); return;
-    }
-    if (!id('modal-overlay')?.classList.contains('hidden')) {
-      Utils.closeModal?.(); return;
-    }
-    if (!id('voice-panel')?.classList.contains('hidden')) {
-      VoiceCommand._closePanel?.(); return;
-    }
+    if (lp) { lp.querySelector('#lp-cancel')?.click(); return true; }
+    if (open('confirm-overlay'))  { id('confirm-no')?.click();        return true; }
+    if (open('modal-overlay'))    { Utils.closeModal?.();             return true; }
+    if (open('voice-panel'))      { VoiceCommand._closePanel?.();     return true; }
     // Ventaglio o azioni rapide aperti → chiude
-    if (this._fanOpen) { this._closeFan(); return; }
-    if (VoiceCommand?._dialOpen) { VoiceCommand._closeDial(); return; }
+    if (this._fanOpen) { this._closeFan(); return true; }
+    if (VoiceCommand?._dialOpen) { VoiceCommand._closeDial(); return true; }
     // Sidebar aperta su mobile → chiude (via _collapseSidebar: sblocca anche lo scroll)
     const sidebar = id('sidebar');
     if (sidebar && !sidebar.classList.contains('collapsed')) {
-      this._collapseSidebar?.(); return;
+      this._collapseSidebar?.(); return true;
     }
     // Tab non home → torna a Finanze
     if (this.currentTab !== 'finanze') {
-      this._activateTab('finanze'); return;
+      this._activateTab('finanze'); return true;
     }
-    // Lock biometrico visibile → ignora il back button
-    if (!id('biometric-lock')?.classList.contains('hidden')) return;
-    // Già su home → esce dall'app
-    window.Capacitor.Plugins.App.exitApp();
+    // Lock biometrico visibile → il back non deve poter uscire
+    if (open('biometric-lock')) return true;
+    return false;
+  },
+
+  // Primo back sulla home: avvisa e basta. Restituisce true se ha solo
+  // avvisato, false se l'uscita è confermata. `rearm` rimette il cuscinetto
+  // di cronologia se il secondo back non arriva in tempo (solo PWA).
+  _armExit(rearm) {
+    if (this._exitArmed) return false;
+    this._exitArmed = true;
+    Utils.showToast(Lang.t('back.exit'), 2000);
+    clearTimeout(this._exitTimer);
+    this._exitTimer = setTimeout(() => {
+      this._exitArmed = false;
+      rearm?.();
+    }, 2200);
+    return true;
   },
 
   _applyThemeToBars() {
