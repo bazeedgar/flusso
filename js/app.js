@@ -687,6 +687,10 @@ const App = {
     btn.addEventListener('contextmenu', (e) => e.preventDefault());
 
     btn.addEventListener('pointerdown', () => {
+      // Azzerato a ogni nuovo gesto: dopo una pressione prolungata con
+      // trascinamento il click non viene generato, quindi il flag resterebbe
+      // alzato e mangerebbe il tocco successivo.
+      this._fanHeld = false;
       if (this._fanOpen) return;          // già aperto: se ne occupa il click
       holding = false;
       clearTimeout(holdTimer);
