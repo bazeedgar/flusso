@@ -63,12 +63,24 @@ const Utils = {
   },
 
   // ── Scroll lock (previene lo scroll del body quando un overlay è aperto) ──────
+  // Su iOS overflow:hidden non ferma lo scroll da touch: serve body position:fixed,
+  // che però azzera lo scroll → va salvato e ripristinato allo sblocco.
   _scrollLocks: 0,
+  _scrollY: 0,
   lockScroll() {
-    if (++this._scrollLocks === 1) document.body.classList.add('no-scroll');
+    if (++this._scrollLocks !== 1) return;
+    this._scrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.top = `-${this._scrollY}px`;
+    document.body.classList.add('no-scroll');
   },
-  unlockScroll() {
-    if (--this._scrollLocks <= 0) { this._scrollLocks = 0; document.body.classList.remove('no-scroll'); }
+  unlockScroll(force = false) {
+    if (force) this._scrollLocks = 0;
+    else if (--this._scrollLocks > 0) return;
+    this._scrollLocks = 0;
+    if (!document.body.classList.contains('no-scroll')) return;
+    document.body.classList.remove('no-scroll');
+    document.body.style.top = '';
+    window.scrollTo(0, this._scrollY);
   },
 
   // Show modal (attachId: pass entry id or temp id to enable attachment section)
@@ -91,8 +103,7 @@ const Utils = {
   closeModal() {
     CustomSelectPicker?._closeImmediate?.();
     document.querySelectorAll('.csel-overlay').forEach(el => el.remove());
-    this._scrollLocks = 0;
-    document.body.classList.remove('no-scroll');
+    this.unlockScroll(true);
     const _ov = document.getElementById('modal-overlay');
     _ov.classList.remove('open');
     this._modalCloseTimer = setTimeout(() => {

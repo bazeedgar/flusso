@@ -115,7 +115,9 @@ body {
   /* Estende il background nella safe area della navigation bar gesture */
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-body.no-scroll { overflow:hidden; }
+/* position:fixed (non solo overflow:hidden) perché iOS ignora overflow:hidden
+   sul body e continua a scrollare il documento al touch. `top` lo setta il JS. */
+body.no-scroll { position:fixed; left:0; right:0; overflow:hidden; }
 
 /* ── App root ─────────────────────────────────────────────── */
 #app {
