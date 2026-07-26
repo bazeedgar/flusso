@@ -140,6 +140,10 @@ const App = {
     // mettiamo al primo tocco, che gli dà la validità che Chrome pretende.
     let buffered = false;
     const push = () => { history.pushState({ flusso: 1 }, ''); buffered = true; };
+    // Dopo un back NON ne creiamo una nuova: nascerebbe anch'essa senza
+    // interazione e verrebbe scavalcata al back seguente. Torniamo invece
+    // avanti su quella già esistente, che resta nello stack in avanti.
+    const restore = () => { buffered = true; history.go(1); };
     const ensure = () => {
       if (buffered) return;
       // Un tocco vuol dire anche che l'utente non sta uscendo: disarma
@@ -150,11 +154,13 @@ const App = {
     window.addEventListener('pointerdown', ensure, { passive: true });
     window.addEventListener('keydown', ensure, { passive: true });
     window.addEventListener('popstate', () => {
+      // Rientro sulla sentinella dopo il nostro go(1): non è un back dell'utente
+      if (history.state?.flusso) return;
       buffered = false;                          // il cuscinetto è stato consumato
-      if (this._handleBack()) { push(); return; }
+      if (this._handleBack()) { restore(); return; }
       // Uscita già confermata: non rimettere il cuscinetto, o intrappoleremmo
       // l'utente impedendogli di uscire.
-      this._armExit(push);
+      this._armExit(restore);
     });
   },
 
