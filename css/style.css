@@ -25,6 +25,8 @@ input,textarea { -webkit-user-select:text; user-select:text; }
   --emerald-rgb:   29,158,117;
   --icon-hue-rotate: 0deg;
   --bar-bg:        rgba(244,239,228,.50);
+  --fan-overlay:   rgba(244,248,245,.35);   /* velatura chiara dietro il ventaglio */
+  --fan-item-bg:   rgba(255,255,255,.72);
   --mint:          #9FE1CB;
   --forest:        #0D2B1E;
   --forest-mid:    #1A3D2A;
@@ -83,6 +85,8 @@ input,textarea { -webkit-user-select:text; user-select:text; }
 /* ── Dark ────────────────────────────────────────────────── */
 [data-theme="dark"] {
   --bar-bg:    rgba(17,28,23,.50);
+  --fan-overlay: rgba(6,10,8,.45);
+  --fan-item-bg: rgba(34,44,38,.72);
   --bg:        #111C17;
   --surface:   #1A2820;
   --surface2:  #162018;
@@ -95,6 +99,8 @@ input,textarea { -webkit-user-select:text; user-select:text; }
 }
 [data-theme="dark-grey"] {
   --bar-bg:    rgba(20,20,20,.50);
+  --fan-overlay: rgba(8,8,8,.48);
+  --fan-item-bg: rgba(40,40,40,.72);
   --bg:        #141414;
   --surface:   #1C1C1C;
   --surface2:  #181818;
@@ -1584,14 +1590,38 @@ textarea { resize:vertical; min-height:70px; }
   position:fixed; inset:0;
   z-index:299;
   touch-action:none;
-  background:rgba(0,0,0,.45);
-  backdrop-filter:blur(3px);
-  -webkit-backdrop-filter:blur(3px);
+  background:var(--fan-overlay);
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
   opacity:0;
   pointer-events:none;
-  transition:opacity .25s;
+  transition:opacity .3s;
 }
 .nav-fan-backdrop.visible { opacity:1; pointer-events:auto; }
+
+/* Suggerimento di rotazione: compare all'apertura e si ritira da solo */
+.nav-fan-hint {
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:calc(var(--sab) + var(--bnav-gap) + var(--bnav-h) + 46px);
+  z-index:301;
+  padding:6px 14px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:600;
+  white-space:nowrap;
+  color:var(--emerald);
+  background:var(--fan-item-bg);
+  border:.5px solid var(--border);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 4px 14px rgba(0,0,0,.15);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .4s;
+}
+.nav-fan-hint.visible { opacity:1; }
 
 /* Origine (0x0) coincidente col centro del pulsante centrale */
 .nav-fan {
@@ -1599,53 +1629,50 @@ textarea { resize:vertical; min-height:70px; }
   left:50%;
   bottom:calc(var(--sab) + var(--bnav-gap) + var(--bnav-h) / 2 + var(--bnav-lift));
   width:0; height:0;
-  z-index:307;                       /* sopra la barra, o le etichette basse finirebbero dietro */
+  z-index:300;                       /* dietro la barra: le voci basse ci si infilano sotto */
   pointer-events:none;
 }
 .nav-fan-item {
   position:absolute;
-  left:0; bottom:0;
-  width:66px; height:66px;
-  margin:0 0 -33px -33px;            /* centra il pulsante sull'origine */
+  left:0; top:0;
+  width:82px; height:82px;
+  margin:-41px 0 0 -41px;            /* centra il pulsante sull'origine */
   touch-action:none;                 /* il gesto lo gestiamo noi: rotazione */
   border:.5px solid var(--border);
-  border-radius:22px;
-  background:var(--surface);
-  color:var(--mod-color, var(--emerald));
-  display:flex; align-items:center; justify-content:center;
+  border-radius:26px;
+  background:var(--fan-item-bg);
+  backdrop-filter:blur(24px) saturate(170%);
+  -webkit-backdrop-filter:blur(24px) saturate(170%);
+  color:var(--text);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:5px;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
-  box-shadow:0 8px 22px rgba(0,0,0,.22);
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
   opacity:0;
-  transform:translate(0,0) scale(.3);
+  transform:scale(.3);
   pointer-events:none;
-  transition:transform .36s cubic-bezier(.34,1.42,.5,1), opacity .2s;
+  transition:transform .36s cubic-bezier(.34,1.42,.5,1), opacity .3s;
 }
 .nav-fan.open .nav-fan-item {
-  opacity:1;
-  transform:translate(var(--tx,0), var(--ty,0)) scale(1);
+  /* --op e --sc sbiadiscono e rimpiccioliscono le voci ruotate fuori campo */
+  opacity:var(--op,1);
+  transform:translate(var(--tx,0), var(--ty,0)) scale(var(--sc,1));
   pointer-events:auto;
   transition-delay:calc(var(--i,0) * 45ms);   /* apertura a cascata */
 }
 /* Durante la rotazione niente transizione, altrimenti le voci inseguono il dito */
 .nav-fan.dragging .nav-fan-item { transition:none; }
-.nav-fan-item:active { filter:brightness(.92); }
-.nav-fan-item .fan-ic { display:flex; }
-.nav-fan-item svg { width:29px; height:29px; display:block; }
+.nav-fan-item:active { filter:brightness(.94); }
+.nav-fan-item .fan-ic { display:flex; color:var(--mod-color, var(--emerald)); }
+.nav-fan-item svg { width:26px; height:26px; display:block; }
 .nav-fan-item .fan-lb {
-  position:absolute;
-  top:100%;
-  left:50%;
-  transform:translateX(-50%);
-  margin-top:7px;
   font-size:10px;
-  font-weight:600;
-  letter-spacing:.2px;
-  white-space:nowrap;
-  color:#fff;
-  text-shadow:0 1px 4px rgba(0,0,0,.6);
+  font-weight:700;
+  line-height:1.1;
+  letter-spacing:.1px;
+  text-align:center;
 }
-.nav-fan-item[data-tab="finanze"]         { --mod-color:var(--finanze); }
 .nav-fan-item[data-tab="casa"]            { --mod-color:var(--casa); }
 .nav-fan-item[data-tab="spesa"]           { --mod-color:var(--spesa); }
 .nav-fan-item[data-tab="intrattenimento"] { --mod-color:var(--intrattenimento); }

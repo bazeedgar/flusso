@@ -655,14 +655,15 @@ const App = {
     // ma limitata alla prima e all'ultima voce (niente ciclo infinito).
     const angleAt = (e) => {
       const r = fan.getBoundingClientRect();
-      return Math.atan2(e.clientY - r.top, e.clientX - r.left) * 180 / Math.PI;
+      return Math.atan2(r.top - e.clientY, e.clientX - r.left) * 180 / Math.PI;
     };
-    let dragging = false, lastA = 0, lastT = 0, vel = 0, raf = 0;
+    const clamp = (v) => Math.max(this._fanG.min, Math.min(this._fanG.max, v));
+    let dragging = false, lastA = 0, lastT = 0, vel = 0, moved = 0, raf = 0;
 
     const onDown = (e) => {
       if (!this._fanOpen) return;
       cancelAnimationFrame(raf);
-      dragging = true; vel = 0;
+      dragging = true; vel = 0; moved = 0;
       this._fanDragged = false;
       lastA = angleAt(e);
       lastT = e.timeStamp;
@@ -671,20 +672,18 @@ const App = {
 
     const onMove = (e) => {
       if (!dragging) return;
+      if (!this._fanG) return;
       const a = angleAt(e);
       let d = a - lastA;
       if (d > 180) d -= 360; else if (d < -180) d += 360;   // salto ±180°
       lastA = a;
-      const g = this._fanG;
-      if (!g) return;
-      // Oltre i limiti il trascinamento fa resistenza invece di bloccarsi netto
-      const past = this._fanOffset > g.max || this._fanOffset < g.min;
-      this._fanOffset += past ? d * 0.35 : d;
+      this._fanOffset = clamp(this._fanOffset + d);
+      moved += Math.abs(d);
       const dt = Math.max(1, e.timeStamp - lastT);
       vel = Math.max(-14, Math.min(14, d / dt * 16));
       lastT = e.timeStamp;
-      if (Math.abs(d) > 0.4) this._fanDragged = true;
-      this._renderFan(true);
+      if (moved > 6) this._fanDragged = true;   // oltre questo è rotazione, non tap
+      this._renderFan();
     };
 
     const onUp = () => {
@@ -692,15 +691,12 @@ const App = {
       dragging = false;
       fan.classList.remove('dragging');
       const tick = () => {
-        const g = this._fanG;
-        if (!g || !this._fanOpen) return;
-        if (this._fanOffset > g.max)      { this._fanOffset += (g.max - this._fanOffset) * 0.22; vel = 0; }
-        else if (this._fanOffset < g.min) { this._fanOffset += (g.min - this._fanOffset) * 0.22; vel = 0; }
-        else { this._fanOffset += vel; vel *= 0.94; }   // scorre e rallenta, resta dov'è
-        this._renderFan(true);
-        const still = Math.abs(vel) < 0.04 &&
-                      this._fanOffset <= g.max + 0.15 && this._fanOffset >= g.min - 0.15;
-        if (!still) raf = requestAnimationFrame(tick);
+        if (!this._fanG || !this._fanOpen) return;
+        vel *= 0.93;
+        if (Math.abs(vel) <= 0.05) return;    // scorre, rallenta e resta dov'è
+        this._fanOffset = clamp(this._fanOffset + vel);
+        this._renderFan();
+        raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     };
@@ -714,8 +710,8 @@ const App = {
     window.addEventListener('resize', () => {
       if (!this._fanOpen) return;
       this._fanG = this._computeFanGeom();
-      this._fanOffset = Math.max(this._fanG.min, Math.min(this._fanG.max, this._fanOffset));
-      this._renderFan(true);
+      this._fanOffset = clamp(this._fanOffset);
+      this._renderFan();
     });
   },
 
@@ -732,46 +728,33 @@ const App = {
 
   // Geometria dell'arco. Ricalcolata a ogni apertura perché dipende sia dai
   // moduli nascosti sia dalla larghezza schermo (rotazione del device inclusa).
+  // Angoli alla maniera del mock: 180 = sinistra, 90 = in alto, 0 = destra,
+  // antiorari, con la y dello schermo invertita al momento di posizionare.
   _computeFanGeom() {
     const fan = document.getElementById('nav-fan');
     const items = [...fan.querySelectorAll('.nav-fan-item')].filter(el => el.style.display !== 'none');
-    const R = 150, ITEM = 66, GAP = 13;
-    const LABEL_DROP = 52;   // da centro voce al fondo della sua etichetta
-    const BAR_CLEAR  = 14;   // quanto il bordo alto della barra sta sopra il centro del pulsante
-    const EDGE = 10;
-    // Scostamento massimo da "dritto in alto" (270°): l'etichetta deve restare
-    // sopra la barra e la voce dentro lo schermo. Su schermi stretti vince il
-    // secondo limite, e le voci in eccesso si raggiungono ruotando.
-    const dVert  = Math.acos(Math.min(1, (LABEL_DROP + BAR_CLEAR) / R));
-    const dHoriz = Math.asin(Math.min(1, (window.innerWidth / 2 - ITEM / 2 - EDGE) / R));
-    const dMax   = Math.max(20, Math.min(dVert, dHoriz) * 180 / Math.PI);
-    const arcStart = 270 - dMax, arcEnd = 270 + dMax, span = arcEnd - arcStart;
-    const step    = 2 * Math.asin(Math.min(1, (ITEM + GAP) / (2 * R))) * 180 / Math.PI;
-    const content = (items.length - 1) * step;
-    const fits    = content <= span;
+    const R = 165, STEP = 36;
     return {
-      items, R, step, arcStart, arcEnd,
-      // Se ci stanno tutte le centriamo e la rotazione è bloccata (resta solo
-      // il rimbalzo elastico); altrimenti si ruota tra la prima e l'ultima.
-      base: fits ? arcStart + (span - content) / 2 : arcStart,
-      min:  fits ? 0 : span - content,
-      max:  0,
+      items, R, STEP,
+      start: 90 + (items.length - 1) * STEP / 2,   // arco centrato sulla verticale
+      min: -160, max: 160,                         // corsa fissa: si ruota sempre
+      visFrom: -25, visTo: 205,                    // fuori da qui la voce sbiadisce
     };
   },
 
-  _renderFan(fade) {
+  _renderFan() {
     const g = this._fanG;
     if (!g) return;
     g.items.forEach((el, i) => {
-      const deg = g.base + i * g.step + this._fanOffset;
+      const deg = g.start - i * g.STEP + this._fanOffset;
       const rad = deg * Math.PI / 180;
+      const vis = deg > g.visFrom && deg < g.visTo;
       el.style.setProperty('--tx', `${(Math.cos(rad) * g.R).toFixed(1)}px`);
-      el.style.setProperty('--ty', `${(Math.sin(rad) * g.R).toFixed(1)}px`);
-      const out = deg < g.arcStart - 6 || deg > g.arcEnd + 6;
-      // Fuori arco: nascosta e non cliccabile. Dentro, l'opacità la governa la
-      // classe .open, così l'apertura a cascata resta.
-      el.style.opacity = out ? '0' : (fade ? '1' : '');
-      el.style.pointerEvents = out ? 'none' : '';
+      el.style.setProperty('--ty', `${(-Math.sin(rad) * g.R).toFixed(1)}px`);
+      // Fuori campo non sparisce: rimpicciolisce e sbiadisce, così si vede
+      // che c'è dell'altro da portare in vista ruotando.
+      el.style.setProperty('--sc', vis ? '1' : '.55');
+      el.style.setProperty('--op', vis ? '1' : '.25');
     });
   },
 
@@ -781,7 +764,7 @@ const App = {
     this._fanG = this._computeFanGeom();
     this._fanOffset = 0;
     this._fanG.items.forEach((el, i) => el.style.setProperty('--i', String(i)));
-    this._renderFan(false);
+    this._renderFan();
   },
 
   _openFan() {
@@ -793,6 +776,10 @@ const App = {
     document.getElementById('nav-fan-backdrop')?.classList.add('visible');
     document.getElementById('bnav-home-btn')?.classList.add('open');
     document.getElementById('bottom-nav')?.classList.add('nav-open');
+    const hint = document.getElementById('nav-fan-hint');
+    hint?.classList.add('visible');
+    clearTimeout(this._fanHintTimer);
+    this._fanHintTimer = setTimeout(() => hint?.classList.remove('visible'), 3200);
     Utils.lockScroll();
   },
 
@@ -803,6 +790,8 @@ const App = {
     document.getElementById('nav-fan-backdrop')?.classList.remove('visible');
     document.getElementById('bnav-home-btn')?.classList.remove('open');
     document.getElementById('bottom-nav')?.classList.remove('nav-open');
+    clearTimeout(this._fanHintTimer);
+    document.getElementById('nav-fan-hint')?.classList.remove('visible');
     Utils.unlockScroll();
   },
 
